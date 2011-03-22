@@ -5,12 +5,9 @@
 #ifndef __RUN_LOOP_H__
 #define __RUN_LOOP_H__
 
-#include <queue>
 #include <deque>
-#include <set>
 
 #include "Condition.h"
-#include "ExclusiveGuard.h"
 #include "SharedPtr.h"
 #include "Timer.h"
 #include "Compare.h"
@@ -33,7 +30,7 @@ private:
     ActiveMsg       * processedMsg_;
     CondVar         c_;
     
-    TimerContainer    timers_;
+    TimerContainer  timers_;
     
     static ThreadLocalStorage<RunLoop> CurrentLoop;
     
