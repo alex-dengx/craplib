@@ -130,9 +130,6 @@
 		24410A74133251470004C635 /* Threading */ = {
 			isa = PBXGroup;
 			children = (
-				370A2766133A4E0400DA5950 /* Data.cpp */,
-				370A2767133A4E0400DA5950 /* Data.h */,
-				370A276A133A4E5300DA5950 /* nocopy.h */,
 				24410A66133250F50004C635 /* Threads.h */,
 				24410A61133250E10004C635 /* Thread.h */,
 				24410A63133250E10004C635 /* Thread.cpp */,
@@ -151,6 +148,9 @@
 				24410A69133250F50004C635 /* SharedPtr.h */,
 				24CBC13F13329EFB000872C5 /* Compare.h */,
 				2418D6881339098600116F34 /* Singleton.h */,
+				370A2766133A4E0400DA5950 /* Data.cpp */,
+				370A2767133A4E0400DA5950 /* Data.h */,
+				370A276A133A4E5300DA5950 /* nocopy.h */,
 			);
 			name = Memory;
 			sourceTree = "<group>";

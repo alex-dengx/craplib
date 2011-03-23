@@ -1,7 +1,6 @@
 #include "Data.h"
 #include <algorithm>
 
-
 static int check_position(int pos, int size)
 {
 	if( pos < 0 || pos > size )
@@ -107,21 +106,3 @@ int Data::compare(const Data & other)const
 		return memcmp(get_data(), other.get_data(), size);
 	return size - other.size;
 }
-
-/*static const wchar_t hexes[] = L"0123456789abcdef";
-std::wstring to_hex(const liba::Data & data)
-{
-	std::wstring result( data.get_size()*2, L' ' );
-
-	for( int i = 0; i != data.get_size(); ++i )
-	{
-		int hi = (data.get_data()[i] >> 4) & 0xf;
-		int lo = data.get_data()[i] & 0xf;
-
-		result[i*2] = hexes[hi];
-		result[i*2+1] = hexes[lo];
-	}
-	return result;
-}
-
-*/

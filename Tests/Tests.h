@@ -6,7 +6,8 @@
 #define __TESTS_H__
 
 #include "SimpleUnit.h"
-#include "MemoryTests.h"
-#include "RunLoopTests.h"
+#include "SocketTests.h"
+// #include "MemoryTests.h"
+// #include "RunLoopTests.h"
 
 #endif // __TESTS_H__
