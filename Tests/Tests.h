@@ -8,7 +8,7 @@
 #include "SimpleUnit.h"
 #include "MemoryTests.h"
 #include "DataTests.h"
-// #include "SocketTests.h"
+#include "SocketTests.h"
 
 #include "RunLoopTests.h"
 
