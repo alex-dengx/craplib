@@ -2,7 +2,6 @@
 // http://code.google.com/p/craplib/source/checkout
 
 #pragma once 
-#pragma once
 #ifndef __NOCOPY_H__
 #define __NOCOPY_H__
 
