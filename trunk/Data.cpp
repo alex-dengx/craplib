@@ -8,47 +8,47 @@ static int check_position(int pos, int size)
 	return pos;
 }
 
-Data::Impl::Impl(int size):
-	data( new unsigned char[size] ),
-	size( size )
-{}
+Data::Impl::Impl(int size)
+: data( new unsigned char[size] )
+, size( size )
+{ }
 
 Data::Impl::~Impl()
 {
 	delete data;
 }
 
-Data::Data():
-	impl( new Impl(0) ),
-	position( 0 ),
-	size( 0 )
-{}
+Data::Data()
+: impl( new Impl(0) )
+, position( 0 )
+, size( 0 )
+{ }
 
-Data::Data(int size):
-	impl( new Impl(size) ),
-	position( 0 ),
-	size( size )
-{}
+Data::Data(int size)
+: impl( new Impl(size) ) 
+, position( 0 ) 
+, size( size )
+{ }
 
-Data::Data(int size, const void * data):
-	impl( new Impl(size) ),
-	position( 0 ),
-	size( size )
+Data::Data(int size, const void * data)
+: impl( new Impl(size) )
+, position( 0 )
+, size( size )
 {
 	memmove(impl->data, data, size);
 }
 
-Data::Data(const Data & data):
-	impl( data.impl ),
-	position( data.position ),
-	size( data.size )
-{}
+Data::Data(const Data & data)
+: impl( data.impl )
+, position( data.position )
+, size( data.size )
+{ }
 
-Data::Data(const Data & data, int pos, int si):
-	impl( data.impl ),
-	position( data.position + check_position(pos, data.size) ),
-	size( std::min(si, data.size - pos) )
-{}
+Data::Data(const Data & data, int pos, int si) 
+: impl( data.impl )
+, position( data.position + check_position(pos, data.size) )
+, size( std::min(si, data.size - pos) )
+{ }
 
 const Data & Data::operator=(const Data & data)
 {
@@ -65,7 +65,7 @@ void Data::swap(Data & other)
 }
 
 Data::~Data()
-{}
+{ }
 
 unsigned char * Data::lock()
 {
