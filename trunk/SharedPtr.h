@@ -57,11 +57,17 @@ public:
     {
         detach();
     }
+	
+	bool isTheOne()const { return ptr_.cnt_->sc_; }
+	void swap(SharedPtr<T>& other)
+	{
+		ptr_.swap(other.ptr_);
+	}
     
     SharedPtr<T>& operator= (const SharedPtr<T>& r) 
     {
         SharedPtr<T> temp(r);
-        std::swap(ptr_, temp.ptr_);
+		swap(temp);
         return *this;
     }
     
