@@ -6,6 +6,7 @@
 #define __WEAK_PTR_H__
 
 #include "Threads.h"
+#include <algorithm>
 
 template <typename T>
 class SharedPtr;
@@ -63,12 +64,15 @@ public:
     { 
         attach();
     }
-    
+	void swap(WeakPtr<T>& other)
+	{
+        std::swap(pObj_, other.pObj_);
+        std::swap(cnt_, other.cnt_);
+	}    
     WeakPtr<T>& operator= (const WeakPtr<T>& r) 
     {
         WeakPtr<T> temp(r);
-        std::swap(pObj_, temp.pObj_);
-        std::swap(cnt_, temp.cnt_);
+		swap(temp);
         return *this;
     }
     
