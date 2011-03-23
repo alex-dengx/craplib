@@ -7,6 +7,7 @@
 
 #include "Thread.h"
 #include "ActiveMsg.h"
+#include "LogUtil.h"
 
 #include <fstream>
 
@@ -26,7 +27,7 @@ private:
     virtual void onCall(const ActiveMsg& msg) {
         switch(message) {
             case START:
-                std::cout << this << " :: Starting to read file..\n";
+                wLog("Starting to read file..");
                 break;
                 
             case CHUNK:
@@ -34,7 +35,7 @@ private:
                 break;
                 
             case COMPLETE:
-                std::cout << this << " :: Complete!\n";
+                wLog("Complete!");
                 break;
         }
     }
@@ -67,7 +68,7 @@ public:
         // FIXME: looks like a very shitty way of reading data :-/
         char data[5];
         while( !stream_.eof() ) {
-            streamsize r = stream_.readsome(data, 5);
+            std::streamsize r = stream_.readsome(data, 5);
             
             if(r==0)
                 break;
