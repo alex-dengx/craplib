@@ -65,7 +65,7 @@ public:
 };
 
 
-// 
+// Basic runloop usage (on main thread)
 ////////////////////////////////////////////////////////////////////
 TEST(Basic, RunLoop) {
     Main m;
