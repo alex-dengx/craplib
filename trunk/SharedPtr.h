@@ -41,7 +41,7 @@ public:
         attach();
     }
     
-    SharedPtr(T* p)
+    explicit SharedPtr(T* p)
     : ptr_(p)
     {
         attach();
