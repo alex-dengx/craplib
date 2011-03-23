@@ -99,7 +99,8 @@
 				24410A6B133250F50004C635 /* AsyncFile.h */,
 				24410A721332512C0004C635 /* Resources */,
 			);
-			path = craplib;
+			name = craplib;
+			path = ../../craplib;
 			sourceTree = "<group>";
 		};
 		24410A721332512C0004C635 /* Resources */ = {
