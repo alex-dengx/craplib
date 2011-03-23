@@ -5,21 +5,26 @@
 #ifndef __SINGLETON_H__
 #define __SINGLETON_H__
 
-/**
- * A minimalistic singleton template
- */
-template<class T>
-class Singleton {
-private:
-	Singleton()	{ };
-	~Singleton() { };
+namespace crap {
     
-public:
-	static T& instance() 
-    { 
-		static T instance;
-		return instance; 
-	};
-};
+    /**
+     * A minimalistic singleton template
+     */
+    template<class T>
+    class Singleton {
+    private:
+        Singleton()	{ };
+        ~Singleton() { };
+        
+    public:
+        static T& instance() 
+        { 
+            static T instance;
+            return instance; 
+        };
+    };
+    
+} // namespace crap
+using namespace crap;
 
 #endif // __SINGLETON_H__

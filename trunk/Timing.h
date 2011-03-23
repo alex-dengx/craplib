@@ -5,9 +5,13 @@
 #ifndef __TIMING_H__
 #define __TIMING_H__
 
-namespace Timing 
-{
+namespace crap {
+namespace Timing {
+        
     double currentTime();
-}
+
+} // namespace Timing
+} // namespace crap
+using namespace crap;
 
 #endif // __TIMING_H__

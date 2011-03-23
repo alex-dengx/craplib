@@ -14,52 +14,57 @@
 #include "Threads.h"
 #include "TLS.h"
 
-class ActiveMsg;
-
-class RunLoop
-{
-private:
-    friend class ActiveMsg;
-    friend class Timer;
+namespace crap {
     
-    typedef std::deque<ActiveMsg*>      MsgContainer;    
-    typedef std::deque<Timer*>          TimerContainer;
-
-    bool            running_;
-    MsgContainer    queue_;
-    ActiveMsg       * processedMsg_;
-    CondVar         c_;
+    class ActiveMsg;
     
-    TimerContainer  timers_;
-    
-    static ThreadLocalStorage<RunLoop> CurrentLoop;
-    
-    void queue( ActiveMsg* msg ); // Called from 2nd thread
-    void dequeue( ActiveMsg* msg );
-    
-    void queue( Timer* timer );
-    void dequeue( Timer* timer );
-    
-public:
-    
-    RunLoop()
-    : c_(false)
-    , running_(false)
-    , processedMsg_(0)
-    { 
-        if(!RunLoop::CurrentLoop) {
-            RunLoop::CurrentLoop = this;
-        } else {
-            throw std::exception();
-        }
-    }
-    
-    void run();
-    
-    void stop()
+    class RunLoop
     {
-        running_ = false;
-    }
-};
-
+    private:
+        friend class ActiveMsg;
+        friend class Timer;
+        
+        typedef std::deque<ActiveMsg*>      MsgContainer;    
+        typedef std::deque<Timer*>          TimerContainer;
+        
+        bool            running_;
+        MsgContainer    queue_;
+        ActiveMsg       * processedMsg_;
+        CondVar         c_;
+        
+        TimerContainer  timers_;
+        
+        static ThreadLocalStorage<RunLoop> CurrentLoop;
+        
+        void queue( ActiveMsg* msg ); // Called from 2nd thread
+        void dequeue( ActiveMsg* msg );
+        
+        void queue( Timer* timer );
+        void dequeue( Timer* timer );
+        
+    public:
+        
+        RunLoop()
+        : c_(false)
+        , running_(false)
+        , processedMsg_(0)
+        { 
+            if(!RunLoop::CurrentLoop) {
+                RunLoop::CurrentLoop = this;
+            } else {
+                throw std::exception();
+            }
+        }
+        
+        void run();
+        
+        void stop()
+        {
+            running_ = false;
+        }
+    };
+    
+} // namespace crap
+using namespace crap;
+    
 #endif // __RUN_LOOP_H__

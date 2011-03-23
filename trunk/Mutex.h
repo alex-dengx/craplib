@@ -7,51 +7,56 @@
 
 #include "Threads.h"
 
-class Lock;
-class CondLock;
-
-/**
- * The mutex resource
- */
-class Mutex
-{
-private:
-    Threads::mutex_type     m_;
+namespace crap {
     
-    friend class Lock;
-    friend class CondLock;
+    class Lock;
+    class CondLock;
     
-public:
-    Mutex()
+    /**
+     * The mutex resource
+     */
+    class Mutex
     {
-        Threads::createMutex(m_, NULL);
-    }
+    private:
+        Threads::mutex_type     m_;
+        
+        friend class Lock;
+        friend class CondLock;
+        
+    public:
+        Mutex()
+        {
+            Threads::createMutex(m_, NULL);
+        }
+        
+        ~Mutex()
+        {
+            Threads::destroyMutex(m_);
+        }
+    };
     
-    ~Mutex()
+    /**
+     * Locks the Mutex resource
+     */
+    class Lock
     {
-        Threads::destroyMutex(m_);
-    }
-};
-
-/**
- * Locks the Mutex resource
- */
-class Lock
-{
-private:
-    Mutex& m_;
+    private:
+        Mutex& m_;
+        
+    public:
+        Lock(Mutex& m)
+        : m_(m)
+        {
+            Threads::lock(m_.m_);
+        }
+        
+        ~Lock()
+        {
+            Threads::unLock(m_.m_);
+        }
+    };
     
-public:
-    Lock(Mutex& m)
-    : m_(m)
-    {
-        Threads::lock(m_.m_);
-    }
-    
-    ~Lock()
-    {
-        Threads::unLock(m_.m_);
-    }
-};
+} // namespace crap
+using namespace crap;
 
 #endif // __MUTEX_H__

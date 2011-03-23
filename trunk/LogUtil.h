@@ -20,16 +20,19 @@
 #define wLog(a...)
 #endif
 
-
 #ifdef __cplusplus
 #include <string>
 #include <stdarg.h>
 
-class LogUtil {
-public:
-	static void log(const std::string& format, ...);
-	static void lstLog(const std::string& format, va_list lst);
-};
+namespace crap {
+    class LogUtil {
+    public:
+        static void log(const std::string& format, ...);
+        static void lstLog(const std::string& format, va_list lst);
+    };
+} // namespace crap
+using namespace crap;
+
 #endif
 
 /// Define a plain C interface

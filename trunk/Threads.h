@@ -9,8 +9,8 @@
 #include <pthread.h>
 #endif
 
-namespace Threads
-{
+namespace crap {
+namespace Threads {
 
 #ifdef __MACH__ // Or just POSIX
 	typedef unsigned            counter;
@@ -45,6 +45,9 @@ namespace Threads
     bool wait(condition_type& c, mutex_type& m, double time); // true if time reached
     int signal(condition_type& c);
     int broadcast(condition_type& c);
-}
+
+} // namespace Threads
+} // namespace crap
+using namespace crap;
 
 #endif // __THREADS_H__

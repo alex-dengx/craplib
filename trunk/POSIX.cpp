@@ -11,8 +11,8 @@
 #include <errno.h>
 
 // Implementation is GCC-specific
-namespace Threads
-{
+namespace crap {
+namespace Threads {
     /* Interlocks */
 	counter interlocked_increment(counter* c) {
         return __sync_add_and_fetch(c, 1);
@@ -88,17 +88,22 @@ namespace Threads
     int broadcast(condition_type& c) {
         return pthread_cond_broadcast(&c);
     }
-}
+} // namespace Threads
+} // namespace crap
+using namespace crap;
 
-
-namespace Timing 
-{
+namespace crap {
+namespace Timing {
+    
     double currentTime()
     {
         struct timeval start;        
         gettimeofday(&start, NULL);
         return double(start.tv_sec) + start.tv_usec * 1E-6;
     }
-}
+} // namespace Timing
+} // namespace crap
+using namespace crap;
+
 
 #endif // __POSIX__
