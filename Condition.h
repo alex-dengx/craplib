@@ -8,83 +8,87 @@
 #include "Mutex.h"
 #include "Threads.h"
 
-
-/**
- * Condition variable
- */
-class CondVar 
-{
-private:
-    Mutex                    m_;
-    Threads::condition_type  c_;
-    bool                     d_;
+namespace crap {
     
-    friend class CondLock;
-    CondVar(const CondVar& other);
-    
-public:
-    explicit CondVar(bool d)
-    : d_(d)
+    /**
+     * Condition variable
+     */
+    class CondVar 
     {
-        Threads::createCondition(c_, NULL);
-    }
+    private:
+        Mutex                    m_;
+        Threads::condition_type  c_;
+        bool                     d_;
         
-    ~CondVar()
-    {
-        Threads::destroyCondition(c_);
-    }
-};
-
-/**
- * Locks on condition
- */
-class CondLock
-{
-private:
-    CondVar&    c_;
-    Lock        lock_;
-    
-    
-    inline void wait(bool val)
-    {
-        while(c_.d_ != val) {
-            Threads::wait(c_.c_, c_.m_.m_);
+        friend class CondLock;
+        CondVar(const CondVar& other);
+        
+    public:
+        explicit CondVar(bool d)
+        : d_(d)
+        {
+            Threads::createCondition(c_, NULL);
         }
-    }
-
-    inline void wait(bool val, double time)
-    {
-        while(c_.d_ != val) {
-            if( Threads::wait(c_.c_, c_.m_.m_, time) )
-                return;
+        
+        ~CondVar()
+        {
+            Threads::destroyCondition(c_);
         }
-    }
-
-public:
-    CondLock(CondVar& cvar, bool val)
-    : c_(cvar)
-    , lock_(c_.m_)
-    {  
-        wait(val);
-    }
-
-    CondLock(CondVar& cvar, bool val, double time)
-    : c_(cvar)
-    , lock_(c_.m_)
-    {  
-        wait(val, time);
-    }
+    };
     
-    CondLock(CondVar& cvar) 
-    : c_(cvar)
-    , lock_(c_.m_)
-    { }
+    /**
+     * Locks on condition
+     */
+    class CondLock
+    {
+    private:
+        CondVar&    c_;
+        Lock        lock_;
+        
+        
+        inline void wait(bool val)
+        {
+            while(c_.d_ != val) {
+                Threads::wait(c_.c_, c_.m_.m_);
+            }
+        }
+        
+        inline void wait(bool val, double time)
+        {
+            while(c_.d_ != val) {
+                if( Threads::wait(c_.c_, c_.m_.m_, time) )
+                    return;
+            }
+        }
+        
+    public:
+        CondLock(CondVar& cvar, bool val)
+        : c_(cvar)
+        , lock_(c_.m_)
+        {  
+            wait(val);
+        }
+        
+        CondLock(CondVar& cvar, bool val, double time)
+        : c_(cvar)
+        , lock_(c_.m_)
+        {  
+            wait(val, time);
+        }
+        
+        CondLock(CondVar& cvar) 
+        : c_(cvar)
+        , lock_(c_.m_)
+        { }
+        
+        inline void set(bool val) 
+        { 
+            c_.d_ = val;
+            Threads::signal(c_.c_);     
+        }
+    };
     
-    inline void set(bool val) 
-    { 
-        c_.d_ = val;
-        Threads::signal(c_.c_);     
-    }
-};
+} // namespace crap
+using namespace crap;
 
 #endif // __CONDITION_H__

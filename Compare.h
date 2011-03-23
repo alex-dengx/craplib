@@ -5,13 +5,18 @@
 #ifndef __PTR_CMP_H__
 #define __PTR_CMP_H__
 
-template<typename T>
-struct PtrCmp
-{
-    bool operator()(const T* a, const T* b) const 
+namespace crap {
+    
+    template<typename T>
+    struct PtrCmp
     {
-        return *a<*b;
-    }
-};
+        bool operator()(const T* a, const T* b) const 
+        {
+            return *a<*b;
+        }
+    };
+    
+} // namespace crap
+using namespace crap;
 
 #endif // __PTR_CMP_H__

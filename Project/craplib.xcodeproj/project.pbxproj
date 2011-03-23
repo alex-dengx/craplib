@@ -47,6 +47,7 @@
 		24410A6D133250F50004C635 /* RunLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RunLoop.h; sourceTree = "<group>"; };
 		24410A6E133250F50004C635 /* test.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.txt; sourceTree = "<group>"; };
 		24410A7B13325A010004C635 /* POSIX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = POSIX.cpp; sourceTree = "<group>"; };
+		24A184A3133A623B00B6C356 /* DataTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataTests.h; path = Tests/DataTests.h; sourceTree = "<group>"; };
 		24C5D3E6133A0DEC0017276F /* SimpleUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleUnit.h; sourceTree = "<group>"; };
 		24C5D3E8133A0E820017276F /* LogUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LogUtil.h; sourceTree = "<group>"; };
 		24C5D3E9133A0E820017276F /* LogUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LogUtil.cpp; sourceTree = "<group>"; };
@@ -190,6 +191,7 @@
 			children = (
 				24C5D3F1133A15B70017276F /* MemoryTests.h */,
 				24C5D3F2133A17810017276F /* RunLoopTests.h */,
+				24A184A3133A623B00B6C356 /* DataTests.h */,
 				24C5D3F4133A486A0017276F /* SocketTests.h */,
 				24C5D3EF133A11BD0017276F /* Tests.h */,
 				24C5D3EC133A117C0017276F /* Tests.cpp */,

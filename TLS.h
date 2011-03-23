@@ -11,43 +11,48 @@
 
 #include <pthread.h>
 
-template<typename T>
-class ThreadLocalStorage 
-{
-private:
-    pthread_key_t   key_;
-
-public:
-    ThreadLocalStorage()
-    {
-        pthread_key_create(&key_, NULL);     
-    }
+namespace crap {
     
-    ~ThreadLocalStorage()
+    template<typename T>
+    class ThreadLocalStorage 
     {
-        pthread_key_delete(key_);
-    }
+    private:
+        pthread_key_t   key_;
+        
+    public:
+        ThreadLocalStorage()
+        {
+            pthread_key_create(&key_, NULL);     
+        }
+        
+        ~ThreadLocalStorage()
+        {
+            pthread_key_delete(key_);
+        }
+        
+        ThreadLocalStorage& operator =(T* p)
+        {
+            pthread_setspecific(key_, p);
+            return *this;
+        }
+        
+        bool operator !() 
+        {
+            return pthread_getspecific(key_)==NULL;
+        }
+        
+        T* const operator ->() const
+        {
+            return static_cast<T*>(pthread_getspecific(key_));
+        }
+        
+        T* const get() const
+        {
+            return static_cast<T*>(pthread_getspecific(key_));
+        }
+    };
     
-    ThreadLocalStorage& operator =(T* p)
-    {
-        pthread_setspecific(key_, p);
-        return *this;
-    }
-    
-    bool operator !() 
-    {
-        return pthread_getspecific(key_)==NULL;
-    }
-    
-    T* const operator ->() const
-    {
-        return static_cast<T*>(pthread_getspecific(key_));
-    }
-    
-    T* const get() const
-    {
-        return static_cast<T*>(pthread_getspecific(key_));
-    }
-};
+} // namespace crap
+using namespace crap;
 
 #endif // __TLS_H__

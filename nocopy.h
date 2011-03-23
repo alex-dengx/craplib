@@ -5,8 +5,7 @@
 #ifndef __NOCOPY_H__
 #define __NOCOPY_H__
 
-namespace crap
-{
+namespace crap {
 
 /** 
  * This class is used to clearly specify to compiler and reader, that another
