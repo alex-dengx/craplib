@@ -32,6 +32,13 @@ public:
             data_ = sock_.write(data_);
         }
     }
+    
+    virtual void onDisconnect(const RWSocket& sock) 
+    {
+        if(&sock == &sock_) {
+            wLog("our socket disconnected");
+        }
+    }
         
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
