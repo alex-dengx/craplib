@@ -35,11 +35,7 @@ void RWSocket::run()
 {
     {
         // Connect on socket
-        {
-            
-            ActiveCall call(t_.msg_);
-            message_ = CONNECTED;
-            
+        {                        
             struct addrinfo hints = {};
             
             hints.ai_family = AF_INET6;
@@ -51,6 +47,9 @@ void RWSocket::run()
             if (errcode != 0)
             {
                 wLog("getaddrinfo failed");
+                ActiveCall call(t_.msg_);
+                message_ = ONERROR;            
+                call.call();
                 return;
             }
             
@@ -61,9 +60,14 @@ void RWSocket::run()
             if ( errcode < 0)
             {
                 wLog("connect failed, will get error on write");
+                ActiveCall call(t_.msg_);
+                message_ = ONERROR;            
+                call.call();
                 return;
-            }            
+            }          
             
+            ActiveCall call(t_.msg_);
+            message_ = CONNECTED;            
             call.call();
         }
         
@@ -71,11 +75,17 @@ void RWSocket::run()
         int opts = fcntl(sock_,F_GETFL);
         if (opts < 0) {
             perror("fcntl(F_GETFL)");
+            ActiveCall call(t_.msg_);
+            message_ = ONERROR;            
+            call.call();
             return;
         }
         opts = (opts | O_NONBLOCK);
         if (fcntl(sock_,F_SETFL,opts) < 0) {
             perror("fcntl(F_SETFL)");
+            ActiveCall call(t_.msg_);
+            message_ = ONERROR;            
+            call.call();
             return;
         }
         
