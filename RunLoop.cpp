@@ -5,6 +5,7 @@
 #include "ActiveMsg.h"
 #include "Condition.h"
 #include "Timer.h"
+#include "LogUtil.h"
 
 ThreadLocalStorage<RunLoop> RunLoop::CurrentLoop;
 
@@ -51,7 +52,14 @@ void RunLoop::run()
             timers_.pop_front();
             t->process();
         }
+        
+        // Now when we have processed everything pending
+        // check whether something new is scheduled.. if not - terminate
+        if(timers_.empty() && msgCnt_ == 0)
+            running_ = false;
     } 
+    
+    wLog("Runloop terminating..");
 }
 
 void RunLoop::queue( ActiveMsg *msg )

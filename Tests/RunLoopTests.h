@@ -36,8 +36,11 @@ private:
             t2_.set(0.2);
         }
         else if(&t == &t3_) {
-            wLog("Shut down time.");
-            runLoop_.stop();
+            // Removing all active objects and timers from the runloop
+            // will result in Runloop termination.
+            t2_.cancel();
+            t1_.cancel();
+            v_.clear();
         }
     }
     
@@ -50,7 +53,7 @@ public:
     void run()
     {
         t1_.set(2.0);
-        t2_.set(0.5);
+        t2_.set(0.2);
         t3_.set(10.0);  // termination timer
         
         runLoop_.run();        
@@ -64,8 +67,16 @@ public:
     }
 };
 
+// Minimal runloop usage (on main thread)
+////////////////////////////////////////////////////////////////////
+//TEST(Mini, RunLoop) {
+//    RunLoop rl;
+//    AsyncFile f("test.txt");
+//    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
+//};
 
-// Basic runloop usage (on main thread)
+
+// Basic runloop usage with timers and active objects (on main thread)
 ////////////////////////////////////////////////////////////////////
 TEST(Basic, RunLoop) {
     Main m;

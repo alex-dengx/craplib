@@ -7,7 +7,8 @@
 
 Timer::~Timer()
 {
-    cancel();
+    if( RunLoop::CurrentLoop.get() != NULL )
+        cancel();
 }
 
 void Timer::cancel()
