@@ -12,12 +12,14 @@ class TestReq
 {
 private:
     RWSocket sock_;
+    Data     data_;
     
 public:
     TestReq()
-    : sock_(*this, "127.0.0.1", "8080")
+    : sock_(*this, "localhost", "80")
+    , data_(409600)
     {
-        
+        data_.fill(1);
     }
     
     // Delegate methods
@@ -25,22 +27,24 @@ public:
     {
         if(&sock == &sock_) {
             wLog("our socket connected");
+            
+            // Write some data
+            data_ = sock_.write(data_);
         }
     }
         
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
         if(&sock == &sock_) {
-            wLog("can read from sock");
+            wLog("Got response: '%s'", d.get_data());
         }
     }
     
     virtual void onCanWrite(const RWSocket& sock)
     {
-        if(&sock == &sock_) {
-            wLog("can write to sock");
-            
-            // bytes = sock_.write(bytes);
+        wLog("on can write..");
+        if(&sock == &sock_ && !data_.empty()) {
+            data_ = sock_.write(data_);
         }
     }
     
@@ -58,7 +62,9 @@ SUITE(Socket);
 ////////////////////////////////////////////////////////////////////
 TEST(Basic, Socket) {
     
+    RunLoop rl;
     TestReq req;
+    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
     
 };
 
