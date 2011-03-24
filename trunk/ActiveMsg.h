@@ -47,11 +47,13 @@ namespace crap {
             }
             
             // The runloop we are working on
-            rl_ = RunLoop::CurrentLoop.get();
+            rl_ = RunLoop::CurrentLoop.get();            
+            RunLoop::CurrentLoop->registerMsg( this );
         }
         
         ~ActiveMsg() {
             RunLoop::CurrentLoop->dequeue( this );
+            RunLoop::CurrentLoop->deregisterMsg( this );
         }
         
         inline void onCall()

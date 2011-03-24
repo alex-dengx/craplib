@@ -32,7 +32,8 @@ namespace crap {
         ActiveMsg       * processedMsg_;
         CondVar         c_;
         
-        TimerContainer  timers_;
+        TimerContainer   timers_;        
+        Threads::counter msgCnt_;
         
         static ThreadLocalStorage<RunLoop> CurrentLoop;
         
@@ -42,18 +43,35 @@ namespace crap {
         void queue( Timer* timer );
         void dequeue( Timer* timer );
         
+        // Maintain counters
+        void registerMsg( ActiveMsg* msg )
+        {
+            Threads::interlocked_increment(&msgCnt_);
+        }
+        
+        void deregisterMsg( ActiveMsg* msg )
+        {
+            Threads::interlocked_decrement(&msgCnt_);
+        }
+        
     public:
         
         RunLoop()
         : c_(false)
         , running_(false)
         , processedMsg_(0)
+        , msgCnt_(0)
         { 
             if(!RunLoop::CurrentLoop) {
                 RunLoop::CurrentLoop = this;
             } else {
                 throw std::exception();
             }
+        }
+        
+        ~RunLoop()
+        {
+            RunLoop::CurrentLoop = NULL;
         }
         
         void run();
