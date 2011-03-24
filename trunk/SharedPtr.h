@@ -73,12 +73,12 @@ namespace crap {
             return *this;
         }
         
-        inline const T& get() const
+        inline T * get() const
         { 
-            return *ptr_.pObj_; 
+            return ptr_.pObj_; 
         }
         
-        inline T* const operator-> () const 
+        inline T * operator-> () const 
         { 
             return ptr_.pObj_; 
         }    
@@ -87,13 +87,30 @@ namespace crap {
         { 
             return ptr_.pObj_ != 0; 
         }
-        
+		
         inline bool operator < ( const SharedPtr<T>& other ) const
         {
             return ptr_.pObj_ < other.ptr_.pObj_;
         }
     };
     
+    template<typename T>
+	inline bool operator==(const SharedPtr<T>& a, const SharedPtr<T>& b )
+	{
+		return a.get() == b.get();
+	}
+    template<typename T>
+	inline bool operator==(const SharedPtr<T>& a, T * b)
+	{
+		return a.get() == b;
+	}
+    template<typename T>
+	inline bool operator==(T * a, const SharedPtr<T>& b)
+	{
+		return a == b.get();
+	}
+	
+
 } // namespace crap
 using namespace crap;
 

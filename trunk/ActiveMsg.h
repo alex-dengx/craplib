@@ -50,6 +50,7 @@ namespace crap {
             rl_ = RunLoop::CurrentLoop.get();            
             RunLoop::CurrentLoop->registerMsg( this );
         }
+		bool is_destroyed()const { return destroyed_; }
         
         ~ActiveMsg() {
             RunLoop::CurrentLoop->dequeue( this );
