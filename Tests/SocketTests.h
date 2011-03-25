@@ -17,9 +17,10 @@ private:
 public:
     TestReq()
     : sock_(*this, "pop.mail.ru", "110")
-    , data_(10, "hello")
+//    : sock_(*this, "localhost", "80")
+    , data_(15, "user godexsoft\n")
     {
-        data_.fill(1);
+//        data_.fill(1);
     }
     
     // Delegate methods
@@ -44,6 +45,9 @@ public:
     {
         if(&sock == &sock_) {
             wLog("Got response: '%s'", d.get_data());
+            
+            data_ = Data(10, "pass alex\n");
+            data_ = sock_.write(data_);
         }
     }
     
