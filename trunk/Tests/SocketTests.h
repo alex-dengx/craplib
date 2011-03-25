@@ -6,6 +6,7 @@
 #define __SOCKET_TESTS_H__
 
 #include "AsyncSocket.h"
+#include <queue>
 
 class TestReq 
 : public RWSocket::Delegate
@@ -13,14 +14,19 @@ class TestReq
 private:
     RWSocket sock_;
     Data     data_;
+    std::queue<std::string> cmds_;
     
 public:
     TestReq()
     : sock_(*this, "pop.mail.ru", "110")
-//    : sock_(*this, "localhost", "80")
-    , data_(15, "user godexsoft\n")
     {
-//        data_.fill(1);
+        cmds_.push("USER login@bk.ru\n");
+        cmds_.push("PASS yourpass\n");
+        cmds_.push("STAT\n");
+        cmds_.push("EXIT\n");
+        
+        data_ = Data(cmds_.front().length(), cmds_.front().c_str());
+        cmds_.pop();
     }
     
     // Delegate methods
@@ -46,14 +52,18 @@ public:
         if(&sock == &sock_) {
             wLog("Got response: '%s'", d.get_data());
             
-            data_ = Data(10, "pass alex\n");
-            data_ = sock_.write(data_);
+            if(!cmds_.empty()) {
+                data_ = Data(cmds_.front().length(), cmds_.front().c_str());
+                cmds_.pop();   
+                
+                sleep(1);
+                data_ = sock_.write(data_);
+            }
         }
     }
     
     virtual void onCanWrite(const RWSocket& sock)
     {
-        wLog("on can write..");
         if(&sock == &sock_ && !data_.empty()) {
             data_ = sock_.write(data_);
         }
