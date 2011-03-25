@@ -74,7 +74,8 @@ const Data& RWSocket::write(const Data& bytes)
     wantWrite_ = false;
     
     int written = send(sock_, bytes.get_data(), bytes.get_size(), 0);
-    wLog("written %u bytes from %u.", written, bytes.get_size());
+    if(written < 0)
+        return Data(bytes); // Nothing is written - most likely socket is dead
     
     if(bytes.get_size()-written > 0)
         wantWrite_ = true;
