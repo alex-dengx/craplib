@@ -16,8 +16,8 @@ private:
     
 public:
     TestReq()
-    : sock_(*this, "localhost", "80")
-    , data_(409600)
+    : sock_(*this, "pop.mail.ru", "110")
+    , data_(10, "hello")
     {
         data_.fill(1);
     }
