@@ -190,7 +190,7 @@ public:
     RWSocket(Delegate& del, const std::string& host, const std::string& service);    
     virtual ~RWSocket();
     
-    const Data& write(const Data& bytes);    
+    const Data write(const Data& bytes);    
 };
 
 
