@@ -10,7 +10,7 @@
 #include <fcntl.h>
 
 SocketImpl::SocketImpl()
-: sock_(socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP))
+: sock_(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 { }
 
 SocketImpl::~SocketImpl()
@@ -18,13 +18,54 @@ SocketImpl::~SocketImpl()
     close(sock_);
 }
 
+RWSocket::RWSocket(Delegate& del, const std::string& host, const std::string& service)
+: delegate_(del)
+, host_(host)
+, service_(service)
+, readData_(1024)
+{
+    struct addrinfo hints = {};
+    
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_V4MAPPED;
+    
+    // TODO: what if we use IP instead of hostname?
+    int errcode = getaddrinfo (host_.c_str(), service_.c_str(), &hints, &addr_);
+    if (errcode != 0)
+    {
+        wLog("getaddrinfo failed");
+        return;
+    }
+    
+    int set = 1;
+    errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
+    if ( errcode < 0)
+    {
+        wLog("connect failed, will get error on write");
+        return;
+    }          
+    
+    // Make non-blocking         
+    int opts = fcntl(sock_,F_GETFL);
+    if (opts < 0) {
+        perror("fcntl(F_GETFL)");
+        return;
+    }
+    opts = (opts | O_NONBLOCK);
+    if (fcntl(sock_,F_SETFL,opts) < 0) {
+        perror("fcntl(F_SETFL)");
+        return;
+    }  
+    
+    statics().registerSocket(this);
+}
+
 RWSocket::~RWSocket()
 {
     statics().deregisterSocket(this);
-
-    t_.requestTermination();
-    t_.waitTermination();
- 
     freeaddrinfo(addr_);
 }
 
@@ -41,6 +82,12 @@ const Data& RWSocket::write(const Data& bytes)
     return Data(bytes, written, bytes.get_size()-written);
 }
 
+size_t RWSocket::readData() 
+{
+    // Read data
+    readData_.fill(0);
+    return read(sock_, readData_.lock(), 1024);
+}
 
 void SocketWorker::run() 
 {
@@ -80,119 +127,44 @@ void SocketWorker::run()
         if(changes > 0) {
             
             CondLock lock(c_);
-            for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {
-                
-                curSock = it->second;
-                
-                if( FD_ISSET(it->first, &read_fd) ) {                            
+            for(Container::iterator it = clients_.begin(); it != clients_.end(); ) {
+                                
+                if( FD_ISSET(it->first, &read_fd) ) {                                      
                     ActiveCall c(t_.msg_);
-                    message_ = CANREAD;
-                    c.call();                    
+                    curSock = it->second;
+
+                    size_t bytes = curSock->readData();                    
+                    if(bytes <= 0) {
+                        message_ = ONCLOSE;
+                        clients_.erase(it++); // Deregister
+                        
+                        c.call();                                       
+                        continue;
+                    }
+                    else {
+                        message_ = ONREAD;
+                        c.call();            
+                    }        
                 }
                 
                 if( FD_ISSET(it->first, &write_fd) ) {
-                    ActiveCall c(t_.msg_);
-                    message_ = CANWRITE;                                        
-                    c.call();
+                    if( it->second->wantWrite() ) {
+                        ActiveCall c(t_.msg_);
+                        curSock = it->second;
+                        message_ = CANWRITE;                                        
+                        c.call();
+                    }
                 }
                 
                 if( FD_ISSET(it->first, &err_fd) ) {
                     ActiveCall c(t_.msg_);
                     message_ = ONERROR;                                        
+                    curSock = it->second;
                     c.call();
                 }
                 
-                curSock = NULL;
+                ++it;
             }            
-        }
-    }
-}
-
-void RWSocket::run() 
-{
-    {
-        // Connect on socket
-        {                        
-            struct addrinfo hints = {};
-            
-            hints.ai_family = AF_INET6;
-            hints.ai_protocol = IPPROTO_TCP;
-            hints.ai_socktype = SOCK_STREAM;
-            
-            // TODO: what if we use IP instead of hostname?
-            int errcode = getaddrinfo (host_.c_str(), service_.c_str(), &hints, &addr_);
-            if (errcode != 0)
-            {
-                wLog("getaddrinfo failed");
-                ActiveCall call(t_.msg_);
-                message_ = ONERROR;            
-                call.call();
-                return;
-            }
-            
-            int set = 1;
-            errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-            errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
-            if ( errcode < 0)
-            {
-                wLog("connect failed, will get error on write");
-                ActiveCall call(t_.msg_);
-                message_ = ONERROR;            
-                call.call();
-                return;
-            }          
-            
-            ActiveCall call(t_.msg_);
-            message_ = CONNECTED;            
-            call.call();
-            
-            // Make non-blocking         
-            int opts = fcntl(sock_,F_GETFL);
-            if (opts < 0) {
-                perror("fcntl(F_GETFL)");
-                return;
-            }
-            opts = (opts | O_NONBLOCK);
-            if (fcntl(sock_,F_SETFL,opts) < 0) {
-                perror("fcntl(F_SETFL)");
-                return;
-            }            
-        }
-                
-        while(1) {
-            CondLock lock(jobOrTermination_, true);    
-            
-            if( readFlag_ ) {
-                // Read data
-                readData_.fill(0);
-                size_t bytes = read(sock_, readData_.lock(), 1024);
-                if (bytes <= 0) {
-                    ActiveCall call(t_.msg_);
-                    message_ = CLOSE;            
- 
-                    statics().deregisterSocket(this);                    
-                    call.call();
-                    
-                    return; // Connection closed                    
-                }
-                
-                readFlag_ = false;
-                
-                ActiveCall call(t_.msg_);
-                message_ = ONREAD;            
-                call.call();
-                
-            }
-            else if( writeFlag_ && wantWrite_ ) {
-
-                writeFlag_ = false;
-
-                ActiveCall call(t_.msg_);
-                message_ = ONWRITE;            
-                call.call();
-            }
-            
-            lock.set(false);
         }
     }
 }

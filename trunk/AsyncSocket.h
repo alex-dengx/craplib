@@ -32,7 +32,14 @@ public:
     virtual ~SocketImpl();
 
 private:
-    virtual void onChanges(bool read, bool write, bool err) = 0;    
+    virtual size_t readData() = 0;
+    virtual bool wantWrite() const = 0;
+    
+    virtual void onConnect() = 0;
+    virtual void onDisconnect() = 0;
+    virtual void onRead() = 0;
+    virtual void onCanWrite() = 0;
+    virtual void onError() = 0;
 };
 
 /**
@@ -50,7 +57,7 @@ private:
     
     ThreadWithMessage                    t_;
     
-    enum message_enum { IDLE, CANREAD, CANWRITE, ONCLOSE, ONERROR };
+    enum message_enum { IDLE, ONCONNECT, ONREAD, CANWRITE, ONCLOSE, ONERROR };
     message_enum        message_;    
     
     SocketImpl          *curSock;
@@ -72,6 +79,11 @@ public:
     
     void registerSocket(SocketImpl* impl)
     {
+        ActiveCall c(t_.msg_);
+        curSock = impl;
+        message_ = ONCONNECT;        
+        c.call();
+        
         CondLock lock(c_);
         clients_.insert( Pair(impl->sock_, impl) );
         lock.set(true); // New client available
@@ -79,7 +91,6 @@ public:
     
     void deregisterSocket(SocketImpl* impl)
     {
-        wLog("dereg sock");
         CondLock lock(c_);
         clients_.erase(impl->sock_);
         lock.set(!clients_.empty());
@@ -88,25 +99,25 @@ public:
     // Processed on main thread
     virtual void onCall(const ActiveMsg& msg) {
 
-        // FIXME: this if shouldn't be necesarry
-        if(curSock)
-            
         switch(message_) {
-            case CANREAD:                
-                curSock->onChanges(true, false, false);
+            case ONCONNECT:   
+                curSock->onConnect();
+                break;
+
+            case ONREAD:   
+                curSock->onRead();
                 break;
                 
             case CANWRITE:                
-                curSock->onChanges(false, true, false);
+                curSock->onCanWrite();
                 break;
                 
             case ONCLOSE:     
-                // TODO: this can't happen?
-                wLog("ON CLOSE");
+                curSock->onDisconnect();
                 break;
                 
             case ONERROR:
-                curSock->onChanges(false, false, true);
+                curSock->onError();
                 break;
                 
             default:
@@ -122,8 +133,6 @@ public:
  */
 class RWSocket
 : private SocketImpl
-, public Runnable
-, public ActiveMsgDelegate
 , private StaticRefCounted<SocketWorker>
 {
 public:
@@ -138,73 +147,50 @@ public:
     };
     
 private:
-    Delegate& delegate_;
+    friend class SocketWorker;
+    Delegate&           delegate_;
     
     std::string         host_, 
                         service_;
     struct addrinfo     *addr_;
     
-    enum message_enum { CONNECTING, CONNECTED, ONREAD, ONWRITE, CLOSE, ONERROR };
-    message_enum        message_;    
-
-    ThreadWithMessage   t_;
-    
     Data                readData_;
     bool                wantWrite_;
-    CondVar             jobOrTermination_;
     
-    bool                readFlag_, writeFlag_, errFlag_;
+    virtual bool wantWrite() const { return wantWrite_; }
+    virtual size_t readData();
     
-    virtual void onChanges(bool read, bool write, bool err)
+    // SocketWorker delegate methods
+    virtual void onConnect() 
     {
-        readFlag_ = read;
-        writeFlag_ = write;
-        errFlag_ = err;
-        
-        CondLock lock(jobOrTermination_);
-        lock.set(true);
+        delegate_.onConnect(*this);
+    }
+
+    virtual void onDisconnect()
+    {
+        delegate_.onDisconnect(*this);  
     }
     
-    virtual void onCall(const ActiveMsg& msg) {
-        switch(message_) {
-            case CONNECTED:
-                delegate_.onConnect(*this);
-                break;
-            case ONREAD:
-                delegate_.onRead(*this, readData_);
-                break;
-            case ONWRITE:
-                delegate_.onCanWrite(*this);
-                break;
-            case CLOSE:
-                delegate_.onDisconnect(*this);
-                break;
-            case ONERROR:
-                delegate_.onError(*this);
-                break;
-            default:
-                break;
-        }
+    virtual void onRead()
+    {
+        delegate_.onRead(*this, readData_);
+    }
+    
+    virtual void onCanWrite()
+    {
+        delegate_.onCanWrite(*this);
+    }
+    
+    virtual void onError()
+    {
+        delegate_.onError(*this);
     }
     
 public:
-    RWSocket(Delegate& del, const std::string& host, const std::string& service)
-    : delegate_(del)
-    , host_(host)
-    , service_(service)
-    , message_(CONNECTING)
-    , t_(*this, *this)
-    , readData_(1024)
-    , jobOrTermination_(false)
-    {
-        statics().registerSocket(this);
-        t_.start();
-    }
-    
+    RWSocket(Delegate& del, const std::string& host, const std::string& service);    
     virtual ~RWSocket();
     
     const Data& write(const Data& bytes);    
-    virtual void run();
 };
 
 
