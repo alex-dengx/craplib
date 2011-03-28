@@ -28,19 +28,21 @@ Socket::~Socket()
 RWSocket::RWSocket(Delegate* del, Socket& sock) 
 : SocketImpl(sock)
 , delegate_(del)
+, addr_(NULL)
 {
     statics().registerSocket(this);
-    onConnect();
+//    onConnect();
 }
 
 RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& service)
 : delegate_(del)
 , host_(host)
 , service_(service)
+, addr_(NULL)
 {
     struct addrinfo hints = {};
     
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags |= AI_V4MAPPED;
@@ -75,20 +77,21 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }  
     
     statics().registerSocket(this);
-    onConnect();
+//    onConnect();
 }
 
 RWSocket::~RWSocket()
 {
     statics().deregisterSocket(this);
-    freeaddrinfo(addr_);
+    if(addr_!=NULL)
+        freeaddrinfo(addr_);
 }
 
 const Data RWSocket::write(const Data& bytes)
 {
     wantWrite_ = false;
     
-    int written = send(sock_, bytes.get_data(), bytes.get_size(), 0);
+    int written = (int)send(sock_, bytes.get_data(), bytes.get_size(), 0);
     if(written < 0)
         return bytes; // Nothing is written - most likely socket is dead
     
@@ -102,7 +105,7 @@ size_t RWSocket::readData()
 {
     // Read data
     Data d(1024);
-    int r = read(sock_, d.lock(), 1024);
+    int r = (int)read(sock_, d.lock(), 1024);
     readData_ = Data(d, 0, r);
     return r;
 }
@@ -188,11 +191,14 @@ void SocketWorker::run()
 }
 
 
-LASocket::LASocket(Delegate& del, const std::string& host, const std::string& service)
+LASocket::LASocket(Delegate* del, const std::string& host, const std::string& service)
 : delegate_(del)
 , host_(host)
 , service_(service)
 {
+    if(delegate_ == NULL)
+        throw std::exception();
+    
     struct addrinfo hints = {};
     
     hints.ai_family = AF_INET;
@@ -236,7 +242,7 @@ LASocket::LASocket(Delegate& del, const std::string& host, const std::string& se
     }
     
     statics().registerSocket(this);
-    onConnect();
+//    onConnect();
 }
 
 LASocket::~LASocket()
@@ -252,7 +258,7 @@ void LASocket::onRead()
     int cli = accept(sock_, NULL, NULL);
     if(cli != -1) {
         Socket sock(cli);
-        delegate_.onNewClient(*this, sock);        
+        delegate_->onNewClient(*this, sock);        
     }
 }
 

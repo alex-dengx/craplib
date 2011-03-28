@@ -63,7 +63,7 @@ private:
     virtual bool wantWrite() const { /* nop */ return false; }
     virtual bool isListening() const { return false; }
     
-    virtual void onConnect() = 0;
+//    virtual void onConnect() = 0;
     virtual void onDisconnect() = 0;
     virtual void onRead() = 0;
     virtual void onCanWrite() { /* nop */ }
@@ -157,7 +157,7 @@ class RWSocket
 public:
     struct Delegate
     {
-        virtual void onConnect(const RWSocket&) = 0;
+//        virtual void onConnect(const RWSocket&) = 0;
         virtual void onDisconnect(const RWSocket&) = 0;
         virtual void onRead(const RWSocket&, const Data&) = 0;
         virtual void onCanWrite(const RWSocket&) = 0;
@@ -181,11 +181,6 @@ private:
     virtual size_t readData();
     
     // SocketWorker delegate methods
-    virtual void onConnect() 
-    {
-        delegate_->onConnect(*this);
-    }
-
     virtual void onDisconnect()
     {
         delegate_->onDisconnect(*this);  
@@ -226,7 +221,7 @@ class LASocket
 public:
     struct Delegate
     {
-        virtual void onListening(const LASocket&) = 0;
+//        virtual void onListening(const LASocket&) = 0;
         virtual void onDisconnect(const LASocket&) = 0;
         virtual void onNewClient(const LASocket&, Socket&) = 0;
         virtual void onError(const LASocket&) = 0;
@@ -235,29 +230,29 @@ public:
     
 private:
     friend class SocketWorker;
-    Delegate&           delegate_;
+    Delegate            *delegate_;
 
     std::string         host_, 
     service_;
     struct addrinfo     *addr_;
     
     // SocketWorker delegate methods
-    virtual void onConnect() 
-    {
-        // Indicates we are ready to accept connections
-        delegate_.onListening(*this);
-    }
+//    virtual void onConnect() 
+//    {
+//        // Indicates we are ready to accept connections
+//        delegate_->onListening(*this);
+//    }
     
     virtual void onDisconnect()
     {
-        delegate_.onDisconnect(*this);  
+        delegate_->onDisconnect(*this);  
     }
     
     virtual void onRead();
     
     virtual void onError()
     {
-        delegate_.onError(*this);
+        delegate_->onError(*this);
     }
     
     virtual bool isListening() const 
@@ -266,7 +261,7 @@ private:
     }
     
 public:
-    LASocket(Delegate& del, const std::string& host, const std::string& service);    
+    LASocket(Delegate* del, const std::string& host, const std::string& service);    
     virtual ~LASocket();
     
 };
