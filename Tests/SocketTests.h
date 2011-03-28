@@ -7,57 +7,72 @@
 
 #include "AsyncSocket.h"
 #include <queue>
+#include <string>
 
 class TestReq 
 : public RWSocket::Delegate
 {
 private:
-    RWSocket sock_;
     Data     data_;
+    RWSocket sock_;
     std::queue<std::string> cmds_;
+    std::string             lastCmd_;
     
 public:
     TestReq()
-    : sock_(this, "pop.mail.ru", "110")
+    : sock_(this, "localhost", "9090")
     {
-        cmds_.push("USER email@bk.ru\n");
-        cmds_.push("PASS pass\n");
-        cmds_.push("STAT\n");
+        Data ldata(4096);   // 4k of 1s
+        ldata.fill(1);
+        ldata.lock()[4095] = '\n';
+        std::string large((char*)ldata.get_data(), 4096);
         
-        data_ = Data(cmds_.front().length(), cmds_.front().c_str());
+        cmds_.push("first line\n");
+        cmds_.push("second test\n");
+        cmds_.push(large);
+        
+        data_ = Data((int)cmds_.front().length(), cmds_.front().c_str());
+        lastCmd_ = cmds_.front();
         cmds_.pop();
+                
+        // Write some data
+        data_ = sock_.write(data_);
     }
     
     // Delegate methods
-    virtual void onConnect(const RWSocket& sock) 
-    {
-        if(&sock == &sock_) {
-            wLog("[%x] our socket connected", &sock);
-            
-            // Write some data
-            data_ = sock_.write(data_);
-        }
-    }
-    
     virtual void onDisconnect(const RWSocket& sock) 
     {
         if(&sock == &sock_) {
-            wLog("[%x] our socket disconnected", &sock);
+            wLog("[%x] test req socket disconnected", &sock);
         }
     }
         
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
-        if(&sock == &sock_) {
-            wLog("[%x] Got response: '%s'", &sock, d.get_data());
+        if(&sock == &sock_) {   
+
+            std::string str((char*)d.get_data(), d.get_size());
+                
+            Data tmp = Data(data_.get_size(), data_.get_data());
+            data_ = Data(d.get_size() + data_.get_size());
+            data_.copy(tmp.get_size(), d);
+            data_.copy(0, tmp);
+             
+            if( *str.rbegin() != '\n' ) {
+                wLog("appended %d bytes. total bytes now %d", d.get_size(), data_.get_size());
+                return;
+            }
+            
+            std::string fullStr((char*)data_.get_data(), data_.get_size());
+            rassert( fullStr == lastCmd_ );
             
             if(!cmds_.empty()) {
-                data_ = Data(cmds_.front().length(), cmds_.front().c_str());
+                data_ = Data((int)cmds_.front().length(), cmds_.front().c_str());
+                lastCmd_ = cmds_.front();
                 cmds_.pop();   
                 
-                sleep(1);
                 data_ = sock_.write(data_);
-            }
+            } 
         }
     }
     
@@ -85,30 +100,21 @@ private:
     
 public:
     TestClient(Socket& sock)
-    : data_(6, "HELLO\n")
-    , sock_(this, sock)
+    : sock_(this, sock)
     { }
     
     // Delegate methods
-    virtual void onConnect(const RWSocket& sock) 
-    {
-        if(&sock == &sock_) {
-            wLog("[%x] our socket connected", &sock);            
-            data_ = sock_.write(data_);
-        }
-    }
-    
     virtual void onDisconnect(const RWSocket& sock) 
     {
         if(&sock == &sock_) {
-            wLog("[%x] our socket disconnected", &sock);
+            wLog("[%x] client socket disconnected", &sock);
         }
     }
     
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
         if(&sock == &sock_) {
-            wLog("[%x] Got data: '%d'", &sock, d.get_size());
+            wLog("[%x] Got data len %d", &sock, d.get_size());
 
             // Echo
             data_ = sock_.write(d);
@@ -130,6 +136,10 @@ public:
 };
 
 
+typedef SharedPtr<TestReq> TestReqPtr;
+std::vector<TestReqPtr> testReqVec;
+
+
 class TestServer
 : public LASocket::Delegate
 {
@@ -141,22 +151,20 @@ private:
     
 public:
     TestServer()
-    : sock_(*this, "localhost", "9090")
-    { }
-    
-    // Delegate methods
-    virtual void onListening(const LASocket& sock)
-    {
-        wLog("[SERVER] listening...");   
+    : sock_(this, "localhost", "9090")
+    { 
+        for(int i=0; i<5; ++i) 
+            testReqVec.push_back( TestReqPtr( new TestReq() ) );
     }
     
+    // Delegate methods    
     virtual void onDisconnect(const LASocket& sock) 
     {
         wLog("[SERVER] exit");
     }
     
     virtual void onNewClient(const LASocket& sock, Socket& cli) 
-    {
+    {        
         clients_.push_back( CliPtr( new TestClient(cli) ) );
     }
     
@@ -169,16 +177,6 @@ public:
 
 
 SUITE(Socket);
-
-// Socket simple tests
-////////////////////////////////////////////////////////////////////
-//TEST(Basic, Socket) {
-//    
-//    RunLoop rl;
-//    TestReq req;
-//    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)    
-//};
-
 
 // Server socket testing - simple echo server
 ////////////////////////////////////////////////////////////////////
