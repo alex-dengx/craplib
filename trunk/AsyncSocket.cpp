@@ -9,20 +9,34 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-SocketImpl::SocketImpl()
+Socket::Socket()
 : sock_(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 { }
 
-SocketImpl::~SocketImpl()
+Socket::Socket(int sock)
+: sock_(sock)
+{ }
+
+Socket::~Socket()
 {
-    close(sock_);
+    if(sock_!=0) {
+        close(sock_);
+    }
 }
 
-RWSocket::RWSocket(Delegate& del, const std::string& host, const std::string& service)
+
+RWSocket::RWSocket(Delegate* del, Socket& sock) 
+: SocketImpl(sock)
+, delegate_(del)
+{
+    statics().registerSocket(this);
+    onConnect();
+}
+
+RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& service)
 : delegate_(del)
 , host_(host)
 , service_(service)
-, readData_(1024)
 {
     struct addrinfo hints = {};
     
@@ -61,6 +75,7 @@ RWSocket::RWSocket(Delegate& del, const std::string& host, const std::string& se
     }  
     
     statics().registerSocket(this);
+    onConnect();
 }
 
 RWSocket::~RWSocket()
@@ -86,8 +101,10 @@ const Data RWSocket::write(const Data& bytes)
 size_t RWSocket::readData() 
 {
     // Read data
-    readData_.fill(0);
-    return read(sock_, readData_.lock(), 1024);
+    Data d(1024);
+    int r = read(sock_, d.lock(), 1024);
+    readData_ = Data(d, 0, r);
+    return r;
 }
 
 void SocketWorker::run() 
@@ -111,7 +128,7 @@ void SocketWorker::run()
         int maxSock = 0;
         
         {
-            CondLock lock(c_);
+            // CondLock lock(c_);
             for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {
                 FD_SET(it->first, &read_fd);
                 FD_SET(it->first, &write_fd);
@@ -127,15 +144,15 @@ void SocketWorker::run()
         // If not timeout
         if(changes > 0) {
             
-            CondLock lock(c_);
+            // CondLock lock(c_);
             for(Container::iterator it = clients_.begin(); it != clients_.end(); ) {
                                 
                 if( FD_ISSET(it->first, &read_fd) ) {                                      
                     ActiveCall c(t_.msg_);
                     curSock = it->second;
 
-                    size_t bytes = curSock->readData();                    
-                    if(bytes <= 0) {
+                    size_t bytes = curSock->readData();
+                    if(bytes <= 0 && !curSock->isListening()) {
                         message_ = ONCLOSE;
                         clients_.erase(it++); // Deregister
                         
@@ -169,3 +186,73 @@ void SocketWorker::run()
         }
     }
 }
+
+
+LASocket::LASocket(Delegate& del, const std::string& host, const std::string& service)
+: delegate_(del)
+, host_(host)
+, service_(service)
+{
+    struct addrinfo hints = {};
+    
+    hints.ai_family = AF_INET;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_V4MAPPED;
+    
+    int errcode = getaddrinfo (host_.c_str(), service_.c_str(), &hints, &addr_);
+    if (errcode != 0)
+    {
+        wLog("getaddrinfo failed");
+        return;
+    }
+    
+    int set = 1;
+    errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    errcode = bind(sock_, addr_->ai_addr, addr_->ai_addrlen);
+    if ( errcode < 0)
+    {
+        wLog("bind failed");
+        return;
+    }          
+    
+    // Make non-blocking         
+    int opts = fcntl(sock_,F_GETFL);
+    if (opts < 0) {
+        perror("fcntl(F_GETFL)");
+        return;
+    }
+    opts = (opts | O_NONBLOCK);
+    if (fcntl(sock_,F_SETFL,opts) < 0) {
+        perror("fcntl(F_SETFL)");
+        return;
+    }  
+    
+    errcode = listen(sock_, 512);
+    if ( errcode < 0)
+    {
+        wLog("listen failed.");
+        return;
+    }
+    
+    statics().registerSocket(this);
+    onConnect();
+}
+
+LASocket::~LASocket()
+{
+    statics().deregisterSocket(this);
+    freeaddrinfo(addr_);
+}
+
+
+void LASocket::onRead()
+{
+    // Indicates there is a new client
+    int cli = accept(sock_, NULL, NULL);
+    if(cli != -1) {
+        Socket sock(cli);
+        delegate_.onNewClient(*this, sock);        
+    }
+}
+

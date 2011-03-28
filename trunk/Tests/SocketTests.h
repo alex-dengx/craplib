@@ -18,12 +18,11 @@ private:
     
 public:
     TestReq()
-    : sock_(*this, "pop.mail.ru", "110")
+    : sock_(this, "pop.mail.ru", "110")
     {
-        cmds_.push("USER login@bk.ru\n");
-        cmds_.push("PASS yourpass\n");
+        cmds_.push("USER email@bk.ru\n");
+        cmds_.push("PASS pass\n");
         cmds_.push("STAT\n");
-        cmds_.push("EXIT\n");
         
         data_ = Data(cmds_.front().length(), cmds_.front().c_str());
         cmds_.pop();
@@ -33,7 +32,7 @@ public:
     virtual void onConnect(const RWSocket& sock) 
     {
         if(&sock == &sock_) {
-            wLog("our socket connected");
+            wLog("[%x] our socket connected", &sock);
             
             // Write some data
             data_ = sock_.write(data_);
@@ -43,14 +42,14 @@ public:
     virtual void onDisconnect(const RWSocket& sock) 
     {
         if(&sock == &sock_) {
-            wLog("our socket disconnected");
+            wLog("[%x] our socket disconnected", &sock);
         }
     }
         
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
         if(&sock == &sock_) {
-            wLog("Got response: '%s'", d.get_data());
+            wLog("[%x] Got response: '%s'", &sock, d.get_data());
             
             if(!cmds_.empty()) {
                 data_ = Data(cmds_.front().length(), cmds_.front().c_str());
@@ -71,7 +70,99 @@ public:
     
     virtual void onError(const RWSocket& sock) 
     {
-        wLog("error on sock");
+        wLog("[%x] error on sock", &sock);
+    }
+    
+};
+
+
+class TestClient 
+: public RWSocket::Delegate
+{
+private:
+    Data data_;
+    RWSocket sock_;
+    
+public:
+    TestClient(Socket& sock)
+    : data_(6, "HELLO\n")
+    , sock_(this, sock)
+    { }
+    
+    // Delegate methods
+    virtual void onConnect(const RWSocket& sock) 
+    {
+        if(&sock == &sock_) {
+            wLog("[%x] our socket connected", &sock);            
+            data_ = sock_.write(data_);
+        }
+    }
+    
+    virtual void onDisconnect(const RWSocket& sock) 
+    {
+        if(&sock == &sock_) {
+            wLog("[%x] our socket disconnected", &sock);
+        }
+    }
+    
+    virtual void onRead(const RWSocket& sock, const Data& d)
+    {
+        if(&sock == &sock_) {
+            wLog("[%x] Got data: '%d'", &sock, d.get_size());
+
+            // Echo
+            data_ = sock_.write(d);
+        }
+    }
+    
+    virtual void onCanWrite(const RWSocket& sock)
+    {
+        if(&sock == &sock_ && !data_.empty()) {
+            data_ = sock_.write(data_);
+        }
+    }
+    
+    virtual void onError(const RWSocket& sock) 
+    {
+        wLog("[%x] error on sock", &sock);
+    }
+    
+};
+
+
+class TestServer
+: public LASocket::Delegate
+{
+private:
+    typedef SharedPtr<TestClient> CliPtr;
+    
+    LASocket sock_;
+    std::vector<CliPtr> clients_;
+    
+public:
+    TestServer()
+    : sock_(*this, "localhost", "9090")
+    { }
+    
+    // Delegate methods
+    virtual void onListening(const LASocket& sock)
+    {
+        wLog("[SERVER] listening...");   
+    }
+    
+    virtual void onDisconnect(const LASocket& sock) 
+    {
+        wLog("[SERVER] exit");
+    }
+    
+    virtual void onNewClient(const LASocket& sock, Socket& cli) 
+    {
+        clients_.push_back( CliPtr( new TestClient(cli) ) );
+    }
+    
+    virtual void onError(const LASocket& sock) 
+    {
+        wLog("[SERVER] error on sock");
     }
     
 };
@@ -81,12 +172,23 @@ SUITE(Socket);
 
 // Socket simple tests
 ////////////////////////////////////////////////////////////////////
-TEST(Basic, Socket) {
+//TEST(Basic, Socket) {
+//    
+//    RunLoop rl;
+//    TestReq req;
+//    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)    
+//};
+
+
+// Server socket testing - simple echo server
+////////////////////////////////////////////////////////////////////
+TEST(Server, Socket) {
     
     RunLoop rl;
-    TestReq req;
-    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
+    TestServer srv;
+    rl.run();
     
 };
+
 
 #endif // __SOCKET_TESTS_H__

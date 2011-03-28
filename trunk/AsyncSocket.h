@@ -6,7 +6,9 @@
 #define __ASYNC_SOCKET_H__
 
 #include <string>
+#include <vector>
 #include <map>
+#include <algorithm>
 
 #include "Data.h"
 #include "Thread.h"
@@ -21,24 +23,50 @@ class SocketWorker;
 /**
  * Socket base class
  */
-class SocketImpl
-{   
+class Socket 
+{
+    friend class RWSocket;
+    
 protected:
-    friend class SocketWorker;
     int sock_;
 
 public:    
-    SocketImpl();    
-    virtual ~SocketImpl();
+    Socket();    
+    Socket(Socket& other) 
+    : sock_(0) 
+    {
+        std::swap(this->sock_, other.sock_);
+    }
+    explicit Socket(int sock);
+    virtual ~Socket();
+};
 
+/**
+ * Base socket with delegate methods
+ */
+class SocketImpl
+: public Socket
+{   
+protected:
+    friend class SocketWorker;
+
+public:
+    SocketImpl() {};
+    
+    SocketImpl(Socket& sock)
+    : Socket(sock) { };
+    
+    virtual ~SocketImpl() {};
+    
 private:
-    virtual size_t readData() = 0;
-    virtual bool wantWrite() const = 0;
+    virtual size_t readData() { /* nop */ return 0; }
+    virtual bool wantWrite() const { /* nop */ return false; }
+    virtual bool isListening() const { return false; }
     
     virtual void onConnect() = 0;
     virtual void onDisconnect() = 0;
     virtual void onRead() = 0;
-    virtual void onCanWrite() = 0;
+    virtual void onCanWrite() { /* nop */ }
     virtual void onError() = 0;
 };
 
@@ -57,7 +85,7 @@ private:
     
     ThreadWithMessage                    t_;
     
-    enum message_enum { IDLE, ONCONNECT, ONREAD, CANWRITE, ONCLOSE, ONERROR };
+    enum message_enum { IDLE, ONREAD, CANWRITE, ONCLOSE, ONERROR };
     message_enum        message_;    
     
     SocketImpl          *curSock;
@@ -79,11 +107,6 @@ public:
     
     void registerSocket(SocketImpl* impl)
     {
-        ActiveCall c(t_.msg_);
-        curSock = impl;
-        message_ = ONCONNECT;        
-        c.call();
-        
         CondLock lock(c_);
         clients_.insert( Pair(impl->sock_, impl) );
         lock.set(true); // New client available
@@ -100,10 +123,6 @@ public:
     virtual void onCall(const ActiveMsg& msg) {
 
         switch(message_) {
-            case ONCONNECT:   
-                curSock->onConnect();
-                break;
-
             case ONREAD:   
                 curSock->onRead();
                 break;
@@ -148,7 +167,8 @@ public:
     
 private:
     friend class SocketWorker;
-    Delegate&           delegate_;
+    
+    Delegate*           delegate_;
     
     std::string         host_, 
                         service_;
@@ -163,31 +183,33 @@ private:
     // SocketWorker delegate methods
     virtual void onConnect() 
     {
-        delegate_.onConnect(*this);
+        delegate_->onConnect(*this);
     }
 
     virtual void onDisconnect()
     {
-        delegate_.onDisconnect(*this);  
+        delegate_->onDisconnect(*this);  
     }
     
     virtual void onRead()
     {
-        delegate_.onRead(*this, readData_);
+        delegate_->onRead(*this, readData_);
     }
     
     virtual void onCanWrite()
     {
-        delegate_.onCanWrite(*this);
+        delegate_->onCanWrite(*this);
     }
     
     virtual void onError()
     {
-        delegate_.onError(*this);
+        delegate_->onError(*this);
     }
     
 public:
-    RWSocket(Delegate& del, const std::string& host, const std::string& service);    
+    RWSocket(Delegate* del, const std::string& host, const std::string& service);    
+    RWSocket(Delegate* del, Socket& sock);    
+    
     virtual ~RWSocket();
     
     const Data write(const Data& bytes);    
@@ -198,7 +220,54 @@ public:
  * Asynchronous listen-accept (aka Server) socket implementation
  */
 class LASocket
+: private SocketImpl
+, private StaticRefCounted<SocketWorker>
 {
+public:
+    struct Delegate
+    {
+        virtual void onListening(const LASocket&) = 0;
+        virtual void onDisconnect(const LASocket&) = 0;
+        virtual void onNewClient(const LASocket&, Socket&) = 0;
+        virtual void onError(const LASocket&) = 0;
+        virtual ~Delegate() { };
+    };
+    
+private:
+    friend class SocketWorker;
+    Delegate&           delegate_;
+
+    std::string         host_, 
+    service_;
+    struct addrinfo     *addr_;
+    
+    // SocketWorker delegate methods
+    virtual void onConnect() 
+    {
+        // Indicates we are ready to accept connections
+        delegate_.onListening(*this);
+    }
+    
+    virtual void onDisconnect()
+    {
+        delegate_.onDisconnect(*this);  
+    }
+    
+    virtual void onRead();
+    
+    virtual void onError()
+    {
+        delegate_.onError(*this);
+    }
+    
+    virtual bool isListening() const 
+    {
+        return true; 
+    }
+    
+public:
+    LASocket(Delegate& del, const std::string& host, const std::string& service);    
+    virtual ~LASocket();
     
 };
 
