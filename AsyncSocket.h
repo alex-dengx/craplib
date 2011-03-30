@@ -116,6 +116,10 @@ public:
     void registerSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
+        if(impl->sock_ >= FD_SETSIZE) {
+            wLog("can't handle this client - select is full.");
+            return;
+        }
         clients_.push_back( impl );
         lock.set(true); // New client available
     }
