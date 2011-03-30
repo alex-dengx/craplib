@@ -129,12 +129,17 @@ void SocketWorker::run()
                 FD_SET((*it)->sock_, &write_fd);
                 FD_SET((*it)->sock_, &err_fd);                
                 
-                maxSock = maxSock > (*it)->sock_ ? maxSock:(*it)->sock_; // Achtung :)
+                maxSock = maxSock > (*it)->sock_ ? maxSock:(*it)->sock_; // Achtung :)                
             }
         }
         
         // Wait for read/write access                        
         int changes = select(maxSock+1, &read_fd, &write_fd, &err_fd, NULL);
+        if(changes < 0) {
+            // Couldn't handle this connection
+            perror("select()");
+            continue;
+        }
         
         // If not timeout
         if(changes > 0) {
@@ -222,11 +227,11 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
     struct sockaddr_in serverAddress = {};    
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_len    = sizeof(serverAddress);
-    serverAddress.sin_port = htons(9090);
+    serverAddress.sin_port = htons(atoi(service.c_str()));
     serverAddress.sin_addr.s_addr = INADDR_ANY;
     
     int set = 1;
-    int errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
