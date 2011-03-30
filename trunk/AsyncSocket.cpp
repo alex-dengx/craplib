@@ -31,7 +31,6 @@ RWSocket::RWSocket(Delegate* del, Socket& sock)
 , addr_(NULL)
 {
     statics().registerSocket(this);
-//    onConnect();
 }
 
 RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& service)
@@ -77,7 +76,6 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }  
     
     statics().registerSocket(this);
-//    onConnect();
 }
 
 RWSocket::~RWSocket()
@@ -104,6 +102,7 @@ const Data RWSocket::write(const Data& bytes)
 size_t RWSocket::readData() 
 {
     // Read data
+    // TODO: move to member buffer
     Data d(1024);
     int r = (int)read(sock_, d.lock(), 1024);
     readData_ = Data(d, 0, r);
@@ -114,30 +113,23 @@ void SocketWorker::run()
 {
     while( true ) {
  
+        int maxSock = 0;
+        
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
             lock.set(!clients_.empty());
-        }
         
-        fd_set read_fd;
-        fd_set write_fd;
-        fd_set err_fd;
+            FD_ZERO(&read_fd);
+            FD_ZERO(&write_fd);
+            FD_ZERO(&err_fd);
         
-        FD_ZERO(&read_fd);
-        FD_ZERO(&write_fd);
-        FD_ZERO(&err_fd);
-        
-        int maxSock = 0;
-        
-        {
-            // CondLock lock(c_);
             for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {
-                FD_SET(it->first, &read_fd);
-                FD_SET(it->first, &write_fd);
-                FD_SET(it->first, &err_fd);                
+                FD_SET((*it)->sock_, &read_fd);
+                FD_SET((*it)->sock_, &write_fd);
+                FD_SET((*it)->sock_, &err_fd);                
                 
-                maxSock = maxSock>it->first?maxSock:it->first; // Achtung :)
+                maxSock = maxSock > (*it)->sock_ ? maxSock:(*it)->sock_; // Achtung :)
             }
         }
         
@@ -146,50 +138,78 @@ void SocketWorker::run()
         
         // If not timeout
         if(changes > 0) {
+            ActiveCall c(t_.msg_);
+            message_ = ONCHANGES;
             
-            // CondLock lock(c_);
-            for(Container::iterator it = clients_.begin(); it != clients_.end(); ) {
-                                
-                if( FD_ISSET(it->first, &read_fd) ) {                                      
-                    ActiveCall c(t_.msg_);
-                    curSock = it->second;
-
-                    size_t bytes = curSock->readData();
-                    if(bytes <= 0 && !curSock->isListening()) {
-                        message_ = ONCLOSE;
-                        clients_.erase(it++); // Deregister
-                        
-                        c.call();                                       
-                        continue;
-                    }
-                    else {
-                        message_ = ONREAD;
-                        c.call();            
-                    }        
-                }
-                
-                if( FD_ISSET(it->first, &write_fd) ) {
-                    if( it->second->wantWrite() ) {
-                        ActiveCall c(t_.msg_);
-                        curSock = it->second;
-                        message_ = CANWRITE;                                        
-                        c.call();
-                    }
-                }
-                
-                if( FD_ISSET(it->first, &err_fd) ) {
-                    ActiveCall c(t_.msg_);
-                    message_ = ONERROR;                                        
-                    curSock = it->second;
-                    c.call();
-                }
-                
-                ++it;
-            }            
+            // TODO: swap instead of FD_COPY to speedup?
+            FD_COPY(&read_fd, &read_fd_copy);
+            FD_COPY(&write_fd, &write_fd_copy);
+            FD_COPY(&err_fd, &err_fd_copy);
+            
+            c.call();
         }
     }
 }
 
+void SocketWorker::handleChanges()
+{
+    for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {        
+        if( FD_ISSET((*it)->sock_, &read_fd_copy) ) {                                      
+            read_.push_back(*it);
+        }
+                                
+        if( FD_ISSET((*it)->sock_, &write_fd_copy) ) {
+            write_.push_back(*it);
+        }
+        
+        if( FD_ISSET((*it)->sock_, &err_fd_copy) ) {
+            err_.push_back(*it);
+        }            
+    }   
+    
+    /*
+     * Process all read, write and error changes
+     */
+    while( !read_.empty() ) {
+        SocketImpl* cur = read_.front();
+        read_.pop_front();
+        
+        if( cur->isListening() ) {
+            cur->onRead(); // new client
+            
+        } else {
+            
+            // Try to actually read
+            int bytes = (int)cur->readData();
+            if(bytes > 0) {
+                cur->onRead();
+            } else if(bytes == 0) {
+                cur->onDisconnect();                
+                deregisterSocket(cur);
+            }
+            else {
+                cur->onError();                
+                deregisterSocket(cur);
+            }
+        }        
+    }
+    
+    while( !write_.empty() ) {
+        SocketImpl* cur = write_.front();
+        write_.pop_front();
+        
+        if( cur->wantWrite() ) {
+            cur->onCanWrite();
+        }
+    }
+    
+    while( !err_.empty() ) {
+        SocketImpl* cur = err_.front();
+        err_.pop_front();
+        
+        cur->onError();
+    }    
+}
 
 LASocket::LASocket(Delegate* del, const std::string& host, const std::string& service)
 : delegate_(del)
@@ -199,28 +219,20 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
     if(delegate_ == NULL)
         throw std::exception();
     
-    struct addrinfo hints = {};
-    
-    hints.ai_family = AF_INET;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags |= AI_V4MAPPED;
-    
-    int errcode = getaddrinfo (host_.c_str(), service_.c_str(), &hints, &addr_);
-    if (errcode != 0)
-    {
-        wLog("getaddrinfo failed");
-        return;
-    }
+    struct sockaddr_in serverAddress = {};    
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_len    = sizeof(serverAddress);
+    serverAddress.sin_port = htons(9090);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
     
     int set = 1;
-    errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    errcode = bind(sock_, addr_->ai_addr, addr_->ai_addrlen);
-    if ( errcode < 0)
+    int errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    
+    if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
-        wLog("bind failed");
+        wLog("bind failed.");
         return;
-    }          
+    }
     
     // Make non-blocking         
     int opts = fcntl(sock_,F_GETFL);
@@ -234,15 +246,14 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
         return;
     }  
     
-    errcode = listen(sock_, 512);
-    if ( errcode < 0)
+    if( listen(sock_, 5) < 0 )
     {
-        wLog("listen failed.");
+        wLog("listen failed\n");
         return;
     }
     
+    
     statics().registerSocket(this);
-//    onConnect();
 }
 
 LASocket::~LASocket()

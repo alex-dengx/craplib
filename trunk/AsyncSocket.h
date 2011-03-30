@@ -6,7 +6,7 @@
 #define __ASYNC_SOCKET_H__
 
 #include <string>
-#include <vector>
+#include <deque>
 #include <map>
 #include <algorithm>
 
@@ -63,7 +63,6 @@ private:
     virtual bool wantWrite() const { /* nop */ return false; }
     virtual bool isListening() const { return false; }
     
-//    virtual void onConnect() = 0;
     virtual void onDisconnect() = 0;
     virtual void onRead() = 0;
     virtual void onCanWrite() { /* nop */ }
@@ -78,17 +77,26 @@ class SocketWorker
 , public ActiveMsgDelegate
 {
 private:
-    typedef std::map<int, SocketImpl*>   Container;
-    typedef std::pair<int, SocketImpl*>  Pair;
+    typedef std::deque<SocketImpl*>      Container;
     CondVar                              c_;
+
     Container                            clients_;
+    Container                            read_, write_, err_;
     
     ThreadWithMessage                    t_;
     
-    enum message_enum { IDLE, ONREAD, CANWRITE, ONCLOSE, ONERROR };
+    enum message_enum { IDLE, ONCHANGES };
     message_enum        message_;    
     
-    SocketImpl          *curSock;
+    fd_set              read_fd;
+    fd_set              write_fd;
+    fd_set              err_fd;
+
+    fd_set              read_fd_copy;
+    fd_set              write_fd_copy;
+    fd_set              err_fd_copy;
+    
+    void handleChanges();
     
 public:
     SocketWorker()
@@ -108,14 +116,19 @@ public:
     void registerSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
-        clients_.insert( Pair(impl->sock_, impl) );
+        clients_.push_back( impl );
         lock.set(true); // New client available
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
-        clients_.erase(impl->sock_);
+        
+        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());
+        read_.erase( std::remove(read_.begin(), read_.end(), impl), read_.end());
+        write_.erase( std::remove(write_.begin(), write_.end(), impl), write_.end());
+        err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
+        
         lock.set(!clients_.empty());
     }
         
@@ -123,27 +136,15 @@ public:
     virtual void onCall(const ActiveMsg& msg) {
 
         switch(message_) {
-            case ONREAD:   
-                curSock->onRead();
-                break;
-                
-            case CANWRITE:                
-                curSock->onCanWrite();
-                break;
-                
-            case ONCLOSE:     
-                curSock->onDisconnect();
-                break;
-                
-            case ONERROR:
-                curSock->onError();
+            case ONCHANGES:
+                handleChanges();
                 break;
                 
             default:
                 break;
         }
     }
-    
+
     virtual void run();
 };
 
@@ -157,7 +158,6 @@ class RWSocket
 public:
     struct Delegate
     {
-//        virtual void onConnect(const RWSocket&) = 0;
         virtual void onDisconnect(const RWSocket&) = 0;
         virtual void onRead(const RWSocket&, const Data&) = 0;
         virtual void onCanWrite(const RWSocket&) = 0;
@@ -221,7 +221,6 @@ class LASocket
 public:
     struct Delegate
     {
-//        virtual void onListening(const LASocket&) = 0;
         virtual void onDisconnect(const LASocket&) = 0;
         virtual void onNewClient(const LASocket&, Socket&) = 0;
         virtual void onError(const LASocket&) = 0;
@@ -237,12 +236,6 @@ private:
     struct addrinfo     *addr_;
     
     // SocketWorker delegate methods
-//    virtual void onConnect() 
-//    {
-//        // Indicates we are ready to accept connections
-//        delegate_->onListening(*this);
-//    }
-    
     virtual void onDisconnect()
     {
         delegate_->onDisconnect(*this);  
