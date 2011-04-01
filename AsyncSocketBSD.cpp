@@ -116,63 +116,59 @@ void SocketWorker::run()
     
     while( true ) {
  
+        struct kevent arr[kqChangeList_.size()];
+
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
-            lock.set(!clients_.empty());        
-        }
-        
-        // Wait for read/write access   
-
-        {
-            ActiveCall c(t_.msg_);
             
             // TODO/FIXME: get rid of this stupid copy!
-            struct kevent arr[kqChangeList_.size()];
             int i = 0;
             for(std::deque<EventHolder>::iterator it=kqChangeList_.begin(); it!=kqChangeList_.end(); ++it) {
                 arr[i++] = it->event;
             }
+        }
         
-            int n = kevent(kq_, arr, (int)kqChangeList_.size(), kqEvents_, (int)clients_.size(), NULL);        
-            if(n <= 0) { 
-                wLog("ERROR ON KEVENT");
+        int n = kevent(kq_, arr, (int)kqChangeList_.size(), kqEvents_, (int)clients_.size(), NULL);        
+        if(n <= 0) { 
+            wLog("ERROR ON KEVENT");
+            continue;
+        }
+        
+
+        ActiveCall c(t_.msg_);
+        message_ = ONCHANGES;
+
+        for(int i=0; i<n; ++i) {
+
+            if(kqEvents_[i].flags & EV_ERROR) { 
+                Container::iterator it = clients_.find((int)kqEvents_[i].ident);
+                if(it != clients_.end()) {
+                    err_.push_back(it->second);
+                }
                 continue;
             }
-            
-            message_ = ONCHANGES;
+                   
+            switch(kqEvents_[i].filter) {
 
-            for(int i=0; i<n; ++i) {
-
-                if(kqEvents_[i].flags & EV_ERROR) { 
+                case EVFILT_READ: {
                     Container::iterator it = clients_.find((int)kqEvents_[i].ident);
                     if(it != clients_.end()) {
-                        err_.push_back(it->second);
+                        read_.push_back(it->second);
                     }
-                    continue;
+                    break;
                 }
-                   
-                switch(kqEvents_[i].filter) {
-
-                    case EVFILT_READ: {
-                        Container::iterator it = clients_.find((int)kqEvents_[i].ident);
-                        if(it != clients_.end()) {
-                            read_.push_back(it->second);
-                        }
-                        break;
+                case EVFILT_WRITE: {
+                    Container::iterator it = clients_.find((int)kqEvents_[i].ident);
+                    if(it != clients_.end()) {                          
+                        write_.push_back(it->second);
                     }
-                    case EVFILT_WRITE: {
-                        Container::iterator it = clients_.find((int)kqEvents_[i].ident);
-                        if(it != clients_.end()) {                          
-                            write_.push_back(it->second);
-                        }
-                        break;
-                    }
-                }                            
-            }
-            
-            c.call();
+                    break;
+                }
+            }                                        
         }    
+        
+        c.call();
     }
 }
 
