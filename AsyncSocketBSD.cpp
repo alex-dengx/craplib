@@ -118,10 +118,8 @@ void SocketWorker::run()
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
-            csz = connections_;
+            csz = (int)clients_.size();
         }
-
-        wLog("kevent starting....");
 
         struct kevent kqEvents_[csz];
         int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL);        
@@ -143,11 +141,13 @@ void SocketWorker::run()
             switch(kqEvents_[i].filter) {
 
                 case EVFILT_READ: {
-                    read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    if(find(clients_.begin(), clients_.end(), static_cast<SocketImpl*>(kqEvents_[i].udata) ) != clients_.end()) 
+                        read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
                 case EVFILT_WRITE: {
-                    write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    if(find(clients_.begin(), clients_.end(), static_cast<SocketImpl*>(kqEvents_[i].udata) ) != clients_.end())
+                        write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
             }                                        
