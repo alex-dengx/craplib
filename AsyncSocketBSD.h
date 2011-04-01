@@ -137,17 +137,17 @@ public:
     
     void deregisterSocket(SocketImpl* impl)
     {
-        CondLock lock(c_);
-
-        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
         read_.erase( std::remove(read_.begin(), read_.end(), impl), read_.end());
         write_.erase( std::remove(write_.begin(), write_.end(), impl), write_.end());
         err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
+
+        CondLock lock(c_);
+        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
                 
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_CLEAR, 0, 0, 0);
+        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_DELETE, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
-        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_CLEAR, 0, 0, 0);
+        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
         
         lock.set(true);
