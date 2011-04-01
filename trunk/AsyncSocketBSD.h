@@ -149,7 +149,8 @@ public:
         kqChangeList_.push_back( EventHolder(impl->sock_, changeLst) );
         
         clients_.insert( std::pair<int, SocketImpl*>(impl->sock_, impl) );
-        wLog("socket attached. new clients size = %d; events = %d", clients_.size(), kqChangeList_.size());
+        wLog("socket attached. new clients size = %d; events = %d; SOCKFD=%d", 
+             clients_.size(), kqChangeList_.size(), impl->sock_);
         lock.set(true); // New client available
     }
     
