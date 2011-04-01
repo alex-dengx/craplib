@@ -112,63 +112,48 @@ size_t RWSocket::readData()
 
 void SocketWorker::run() 
 {
-    kq_ = kqueue();        
-    
     while( true ) {
  
-        struct kevent arr[MAX_CONNECTIONS];
-        int sz = 0;
+        int csz = 0;
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
-            sz = (int)kqChangeList_.size();
-            
-            
-            // TODO/FIXME: get rid of this stupid copy!
-            int i = 0;
-            for(std::deque<EventHolder>::iterator it=kqChangeList_.begin(); it!=kqChangeList_.end(); ++it) {
-                arr[i++] = it->event;
-            }
+            csz = connections_;
         }
-        
-        int n = kevent(kq_, arr, sz, kqEvents_, sz, NULL);        
+
+        wLog("kevent starting....");
+
+        struct kevent kqEvents_[csz];
+        int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL);        
         if(n <= 0) { 
             wLog("ERROR ON KEVENT");
             continue;
         }
         
-
-        ActiveCall c(t_.msg_);
+        ActiveCall c(t_.msg_);        
         message_ = ONCHANGES;
 
         for(int i=0; i<n; ++i) {
 
             if(kqEvents_[i].flags & EV_ERROR) { 
-                Container::iterator it = clients_.find((int)kqEvents_[i].ident);
-                if(it != clients_.end()) {
-                    err_.push_back(it->second);
-                }
+                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                 continue;
             }
                    
             switch(kqEvents_[i].filter) {
 
                 case EVFILT_READ: {
-                    Container::iterator it = clients_.find((int)kqEvents_[i].ident);
-                    if(it != clients_.end()) {
-                        read_.push_back(it->second);
-                    }
+                    read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
                 case EVFILT_WRITE: {
-                    Container::iterator it = clients_.find((int)kqEvents_[i].ident);
-                    if(it != clients_.end()) {                          
-                        write_.push_back(it->second);
-                    }
+                    write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
             }                                        
-        }    
+        }   
+        
+          wLog("kevent sizes n=%d; read=%d; write=%d; err=%d", n, read_.size(), write_.size(), err_.size());
         
         c.call();
     }
@@ -279,6 +264,8 @@ void LASocket::onRead()
     if(cli != -1) {
         Socket sock(cli);
         delegate_->onNewClient(*this, sock);        
+    } else {
+        perror("accept()");
     }
 }
 
