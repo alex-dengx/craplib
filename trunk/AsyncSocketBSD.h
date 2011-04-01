@@ -81,39 +81,18 @@ class SocketWorker
 , public ActiveMsgDelegate
 {
 private:
-    
-    struct EventHolder {
-        int           sock;
-        struct kevent event;
-        
-        EventHolder(int s, const struct kevent& ev)
-        : sock(s)
-        , event(ev) 
-        {};
+    typedef std::deque<SocketImpl*>  Vec;
+    CondVar             c_;
 
-        operator struct kevent* () 
-        {
-            return &event;
-        }
-        
-        bool operator == (int s) const 
-        {
-            return sock == s;
-        }
-    };
+    Vec                 clients_;
+    Vec                 read_, write_, err_;
     
-    typedef std::deque<SocketImpl*>      Vec;
-    CondVar                              c_;
-
-    Vec                                  read_, write_, err_;
-    
-    ThreadWithMessage                    t_;
+    ThreadWithMessage   t_;
     
     enum message_enum { IDLE, ONCHANGES };
     message_enum        message_;    
     
-    int                             kq_;
-    int                             connections_;
+    int                 kq_;
     
     void handleChanges();
     
@@ -123,7 +102,6 @@ public:
     , t_(*this, *this)
     , message_(IDLE)
     , kq_( kqueue() )        
-    , connections_(0)
     { 
         t_.start();
     }
@@ -137,41 +115,42 @@ public:
     void registerSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
-        if(connections_ >= MAX_CONNECTIONS-1) {
+        if(clients_.size() >= MAX_CONNECTIONS-1) {
             wLog("can't handle this client - kqueue buffer is full.");
             return;
         }
         
+        clients_.push_back(impl);
+        
         // Set the event filter
         struct kevent changeLst;
         EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_ADD, 0, 0, impl);
-        kevent(kq_, &changeLst, 1, 0, 0, NULL);        
+        kevent(kq_, &changeLst, 1, 0, 0, NULL);                
         EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_ADD, 0, 0, impl);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
         
-        ++connections_;
-        
         wLog("socket attached. new clients size = %d; SOCKFD=%d", 
-             connections_, impl->sock_);
+             clients_.size(), impl->sock_);
+        
         lock.set(true); // New client available
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
-        
+
+        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
         read_.erase( std::remove(read_.begin(), read_.end(), impl), read_.end());
         write_.erase( std::remove(write_.begin(), write_.end(), impl), write_.end());
         err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
                 
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_CLEAR, 0, 0, impl);
+        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_CLEAR, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
-        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_CLEAR, 0, 0, impl);
+        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_CLEAR, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
         
-        --connections_;
-        lock.set(connections_>0);
+        lock.set(true);
     }
         
     // Processed on main thread
