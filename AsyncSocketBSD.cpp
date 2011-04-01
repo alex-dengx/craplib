@@ -56,7 +56,8 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }
     
     int set = 1;
-    errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
     errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
     if ( errcode < 0)
     {
@@ -112,6 +113,10 @@ size_t RWSocket::readData()
 
 void SocketWorker::run() 
 {
+    timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 1000;
+    
     while( true ) {
  
         int csz = 0;
@@ -122,16 +127,25 @@ void SocketWorker::run()
         }
 
         struct kevent kqEvents_[MAX_CONNECTIONS];
-        int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL);        
-        if(n <= 0) { 
-            wLog("ERROR ON KEVENT");
+        int n = kevent(kq_, 0, 0, kqEvents_, csz, &ts);        
+        if(n == 0) {
             continue;
+        }
+        else if(n < 0) { 
+            wLog("Err on kevent");
+            return;
         }
         
         ActiveCall c(t_.msg_);        
         message_ = ONCHANGES;
 
         for(int i=0; i<n; ++i) {
+
+            if (kqEvents_[i].flags & EV_EOF)  {
+                wLog("EOF on sock");
+                deregisterSocket(static_cast<SocketImpl*>(kqEvents_[i].udata));
+                continue;
+            }
 
             if(kqEvents_[i].flags & EV_ERROR) { 
                 err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
@@ -225,6 +239,7 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
     
     int set = 1;
     setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));    
     
     if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
