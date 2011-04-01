@@ -116,11 +116,13 @@ void SocketWorker::run()
     
     while( true ) {
  
-        struct kevent arr[kqChangeList_.size()];
-
+        struct kevent arr[MAX_CONNECTIONS];
+        int sz = 0;
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
+            sz = (int)kqChangeList_.size();
+            
             
             // TODO/FIXME: get rid of this stupid copy!
             int i = 0;
@@ -129,7 +131,7 @@ void SocketWorker::run()
             }
         }
         
-        int n = kevent(kq_, arr, (int)kqChangeList_.size(), kqEvents_, (int)clients_.size(), NULL);        
+        int n = kevent(kq_, arr, sz, kqEvents_, sz, NULL);        
         if(n <= 0) { 
             wLog("ERROR ON KEVENT");
             continue;
