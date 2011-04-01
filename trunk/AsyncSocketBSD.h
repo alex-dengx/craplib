@@ -110,6 +110,7 @@ public:
     {
         t_.requestTermination();
         t_.waitTermination();
+        close(kq_);
     }
     
     void registerSocket(SocketImpl* impl)
