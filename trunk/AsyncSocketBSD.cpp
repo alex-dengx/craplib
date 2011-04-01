@@ -121,7 +121,7 @@ void SocketWorker::run()
             csz = (int)clients_.size();
         }
 
-        struct kevent kqEvents_[csz];
+        struct kevent kqEvents_[MAX_CONNECTIONS];
         int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL);        
         if(n <= 0) { 
             wLog("ERROR ON KEVENT");
@@ -141,19 +141,17 @@ void SocketWorker::run()
             switch(kqEvents_[i].filter) {
 
                 case EVFILT_READ: {
-                    if(find(clients_.begin(), clients_.end(), static_cast<SocketImpl*>(kqEvents_[i].udata) ) != clients_.end()) 
-                        read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
                 case EVFILT_WRITE: {
-                    if(find(clients_.begin(), clients_.end(), static_cast<SocketImpl*>(kqEvents_[i].udata) ) != clients_.end())
-                        write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
             }                                        
         }   
         
-          wLog("kevent sizes n=%d; read=%d; write=%d; err=%d", n, read_.size(), write_.size(), err_.size());
+        wLog("kevent sizes n=%d; read=%d; write=%d; err=%d", n, read_.size(), write_.size(), err_.size());
         
         c.call();
     }
@@ -167,6 +165,8 @@ void SocketWorker::handleChanges()
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
         
         if( cur->isListening() ) {
             cur->onRead(); // new client
@@ -191,6 +191,8 @@ void SocketWorker::handleChanges()
     while( !write_.empty() ) {
         SocketImpl* cur = write_.front();
         write_.pop_front();
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
         
         if( cur->wantWrite() ) {
             cur->onCanWrite();
@@ -199,8 +201,10 @@ void SocketWorker::handleChanges()
     
     while( !err_.empty() ) {
         SocketImpl* cur = err_.front();
-        err_.pop_front();
-        
+        err_.pop_front();        
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
+
         cur->onError();
     }    
 }
