@@ -149,12 +149,6 @@ void SocketWorker::run()
                     if(it != clients_.end()) {
                         err_.push_back(it->second);
                     }
-                    else {
-                        kqChangeList_.erase( std::remove(kqChangeList_.begin(), 
-                                                         kqChangeList_.end(), 
-                                                         (int)kqEvents_[i].ident),
-                                            kqChangeList_.end());
-                    }
                     continue;
                 }
                    
@@ -165,13 +159,6 @@ void SocketWorker::run()
                         if(it != clients_.end()) {
                             read_.push_back(it->second);
                         }
-                        else {
-                            kqChangeList_.erase( std::remove(kqChangeList_.begin(), 
-                                                             kqChangeList_.end(), 
-                                                             (int)kqEvents_[i].ident),
-                                                kqChangeList_.end());
-                        }
-
                         break;
                     }
                     case EVFILT_WRITE: {
@@ -179,13 +166,6 @@ void SocketWorker::run()
                         if(it != clients_.end()) {                          
                             write_.push_back(it->second);
                         }
-                        else {
-                            kqChangeList_.erase( std::remove(kqChangeList_.begin(), 
-                                                             kqChangeList_.end(), 
-                                                             (int)kqEvents_[i].ident),
-                                                kqChangeList_.end());
-                        }
-
                         break;
                     }
                 }                            
@@ -277,7 +257,7 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
         return;
     }  
     
-    if( listen(sock_, 5) < 0 )
+    if( listen(sock_, 512) < 0 )
     {
         wLog("listen failed\n");
         return;
