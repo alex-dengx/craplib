@@ -168,7 +168,7 @@ public:
                                          impl->sock_),
                             kqChangeList_.end());
         
-        lock.set(!clients_.empty());
+        lock.set(!kqChangeList_.empty());
     }
         
     // Processed on main thread
