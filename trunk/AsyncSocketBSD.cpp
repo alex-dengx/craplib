@@ -113,9 +113,9 @@ size_t RWSocket::readData()
 
 void SocketWorker::run() 
 {
-    timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 1000;
+//    timespec ts;
+//    ts.tv_sec = 0;
+//    ts.tv_nsec = 1000;
     
     while( true ) {
  
@@ -126,8 +126,8 @@ void SocketWorker::run()
             csz = (int)clients_.size();
         }
 
-        struct kevent kqEvents_[MAX_CONNECTIONS];
-        int n = kevent(kq_, 0, 0, kqEvents_, csz, &ts);        
+        struct kevent kqEvents_[1024];
+        int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL); // &ts        
         if(n == 0) {
             continue;
         }
@@ -141,11 +141,11 @@ void SocketWorker::run()
 
         for(int i=0; i<n; ++i) {
 
-            if (kqEvents_[i].flags & EV_EOF)  {
-                wLog("EOF on sock");
-                deregisterSocket(static_cast<SocketImpl*>(kqEvents_[i].udata));
-                continue;
-            }
+//            if (kqEvents_[i].flags & EV_EOF)  {
+//                wLog("EOF on sock");
+//                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+//                continue;
+//            }
 
             if(kqEvents_[i].flags & EV_ERROR) { 
                 err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
