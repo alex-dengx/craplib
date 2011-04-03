@@ -104,7 +104,6 @@ const Data RWSocket::write(const Data& bytes)
 size_t RWSocket::readData() 
 {
     // Read data
-    // TODO: move to member buffer
     Data d(1024);
     int r = (int)read(sock_, d.lock(), 1024);
     readData_ = Data(d, 0, r);
@@ -119,15 +118,13 @@ void SocketWorker::run()
     
     while( true ) {
  
-        int csz = 0;
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
-            csz = (int)clients_.size();
         }
 
         struct kevent kqEvents_[1024];
-        int n = kevent(kq_, 0, 0, kqEvents_, csz, NULL); // &ts        
+        int n = kevent(kq_, 0, 0, kqEvents_, 1024, NULL); // &ts        
         if(n == 0) {
             continue;
         }
