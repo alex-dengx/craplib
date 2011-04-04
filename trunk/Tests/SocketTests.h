@@ -6,6 +6,7 @@
 #define __SOCKET_TESTS_H__
 
 #include "AsyncSocket.h"
+#include "AsyncNetInterface.h"
 #include <queue>
 #include <string>
 
@@ -176,17 +177,48 @@ public:
 };
 
 
+
+
+class GetInterfaces
+: public NetworkInterfaces::Delegate
+{
+private:
+    NetworkInterfaces nif_;
+    
+public:
+    GetInterfaces()
+    : nif_(this)
+    {  }
+    
+    // Delegate methods    
+    virtual void onInterfaceDetected(const NetworkInterfaces& nif, const NetworkInterface& iface) 
+    {
+        wLog("Got detected network interface: %s IP: %s", iface.name().c_str(), iface.ip().c_str());
+    }
+};
+
+
+
 SUITE(Socket);
 
 // Server socket testing - simple echo server
 ////////////////////////////////////////////////////////////////////
-TEST(Server, Socket) {
+//TEST(Server, Socket) {
+//    
+//    RunLoop rl;
+//    TestServer srv;
+//    rl.run();
+//    
+//};
+
+TEST(GetInterfaces, Socket) {
     
     RunLoop rl;
-    TestServer srv;
+    GetInterfaces gif;
     rl.run();
     
 };
+
 
 
 #endif // __SOCKET_TESTS_H__

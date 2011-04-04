@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		240F44AB1349FDDE00541FA7 /* AsyncNetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */; };
 		24410A65133250E10004C635 /* Thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A63133250E10004C635 /* Thread.cpp */; };
 		24410A6F133250F50004C635 /* RunLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A6A133250F50004C635 /* RunLoop.cpp */; };
 		24410A77133251D60004C635 /* test.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 24410A6E133250F50004C635 /* test.txt */; };
@@ -33,6 +34,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncNetInterface.cpp; sourceTree = "<group>"; };
+		240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncNetInterface.h; sourceTree = "<group>"; };
 		2418D6881339098600116F34 /* Singleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Singleton.h; sourceTree = "<group>"; };
 		24410A55133250CC0004C635 /* craplib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = craplib; sourceTree = BUILT_PRODUCTS_DIR; };
 		24410A61133250E10004C635 /* Thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Thread.h; sourceTree = "<group>"; };
@@ -84,6 +87,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		240F44A71349FD9C00541FA7 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				24C5D3F3133A243E0017276F /* AsyncSocket.h */,
+				24931BBE133BA4EE006FE5B0 /* AsyncSocket.cpp */,
+				24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */,
+				24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */,
+				240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */,
+				240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
 		24410A4A133250CC0004C635 = {
 			isa = PBXGroup;
 			children = (
@@ -106,10 +122,6 @@
 				24C5D3EB133A10F20017276F /* Tests */,
 				24410A73133251390004C635 /* Source */,
 				24410A7B13325A010004C635 /* POSIX.cpp */,
-				24C5D3F3133A243E0017276F /* AsyncSocket.h */,
-				24931BBE133BA4EE006FE5B0 /* AsyncSocket.cpp */,
-				24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */,
-				24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */,
 				24410A6B133250F50004C635 /* AsyncFile.h */,
 				24410A721332512C0004C635 /* Resources */,
 			);
@@ -128,6 +140,7 @@
 		24410A73133251390004C635 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				240F44A71349FD9C00541FA7 /* Network */,
 				24C5D3E7133A0E700017276F /* Logging */,
 				24C5D3E3133A0D730017276F /* UnitTests */,
 				24410A761332517C0004C635 /* Runloop */,
@@ -265,6 +278,7 @@
 				370A2768133A4E0400DA5950 /* Data.cpp in Sources */,
 				24931BBF133BA4EE006FE5B0 /* AsyncSocket.cpp in Sources */,
 				24931BC4133CB856006FE5B0 /* AsyncAddrInfo.cpp in Sources */,
+				240F44AB1349FDDE00541FA7 /* AsyncNetInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
