@@ -15,6 +15,7 @@
 #include "ActiveMsg.h"
 #include "LogUtil.h"
 #include "StaticRefCounted.h"
+#include "AsyncNetInterface.h"
 
 class RWSocket;
 class LASocket;
@@ -234,9 +235,9 @@ public:
 private:
     friend class SocketWorker;
     Delegate            *delegate_;
-
-    std::string         host_, 
-    service_;
+    
+    NetworkInterface    if_;
+    std::string         service_;
     struct addrinfo     *addr_;
     
     // SocketWorker delegate methods
@@ -258,7 +259,8 @@ private:
     }
     
 public:
-    LASocket(Delegate* del, const std::string& host, const std::string& service);    
+    LASocket(Delegate* del, const std::string& service);
+    LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service);    
     virtual ~LASocket();
     
 };
