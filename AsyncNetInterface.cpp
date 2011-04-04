@@ -20,5 +20,11 @@ void NetworkInterfaces::run()
 
 void NetworkInterfaces::onCall(const ActiveMsg& msg) 
 {
-    delegate_->onInterfaceDetected(*this, curInterface_);
+    if(filter_ == NetworkInterface::ANY || curInterface_.family() == filter_ ||
+       (filter_ == NetworkInterface::IP 
+        && (curInterface_.family() == NetworkInterface::IPv4 ||
+            curInterface_.family() == NetworkInterface::IPv6)
+        ) 
+       )
+        delegate_->onInterfaceDetected(*this, curInterface_);
 }

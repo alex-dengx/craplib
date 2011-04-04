@@ -23,23 +23,67 @@ class NetworkInterfaces;
  */ 
 class NetworkInterface
 {
+public:
+    enum Family {
+        UNKNOWN = 0,
+        ANY = 1,
+        IP = 2,
+        IPv4 = 4,
+        IPv6 = 6
+    };
+    
 private:
     friend class NetworkInterfaces;
 
     std::string     ip_;
     std::string     if_;
-    struct sockaddr addr_;
+    union {
+        struct sockaddr_in  addr_;
+        struct sockaddr_in6 addr6_;
+    };
+    Family          family_;
     
-    NetworkInterface(ifaddrs* addr)
+    NetworkInterface(ifaddrs* inaddr)
     {
-        if_ = std::string( addr->ifa_name );
-        std::swap(addr_, *addr->ifa_addr);
-        ip_ = std::string( inet_ntoa(((sockaddr_in*)&addr_)->sin_addr) );        
+        if_ = std::string( inaddr->ifa_name );
+                
+        if(inaddr->ifa_addr->sa_family == AF_INET6) {
+            char straddr[INET6_ADDRSTRLEN] = {};
+            struct sockaddr_in6* addr = (struct sockaddr_in6*)inaddr->ifa_addr;
+            ip_ = std::string( inet_ntop(AF_INET6, &addr->sin6_addr,
+                                         straddr, sizeof(straddr)) );
+            family_ = IPv6;
+            std::swap(addr6_, *addr);
+            
+        } else if (inaddr->ifa_addr->sa_family == AF_INET) {
+            
+            struct sockaddr_in* addr = (struct sockaddr_in*)inaddr->ifa_addr;
+            ip_ = std::string( inet_ntoa(addr->sin_addr) );        
+            family_ = IPv4;
+            std::swap(addr_, *addr);
+            
+        } else {
+            
+            family_ = UNKNOWN;
+            // Not interested
+        }
     }
     
 public:
     NetworkInterface()
     { }
+    
+    NetworkInterface(const NetworkInterface& other)
+    : ip_(other.ip_)
+    , if_(other.if_)
+    , family_(other.family_)
+    {
+        memcpy(&addr_, &other.addr_, sizeof( other.addr_ ));
+    }
+       
+    ~NetworkInterface()
+    {
+    }
     
     inline std::string ip() const
     {
@@ -50,6 +94,21 @@ public:
     {
         return if_;
     }        
+    
+    inline Family family() const 
+    {
+        return family_;
+    }
+    
+    inline const struct sockaddr_in* const addr() const 
+    {
+        return &addr_;
+    }
+    
+    inline const struct sockaddr_in6* const addr6() const 
+    {
+        return &addr6_;
+    }
 };
 
 
@@ -70,14 +129,16 @@ private:
     enum message_type { IDLE, INTERFACE_DETECTED };
     message_type        message_;
     
-    ifaddrs*            addrs_;
-    NetworkInterface    curInterface_;
+    ifaddrs*                    addrs_;
+    NetworkInterface            curInterface_;
+    NetworkInterface::Family    filter_;
     
 public:
-    NetworkInterfaces(Delegate* del)
+    NetworkInterfaces(Delegate* del, NetworkInterface::Family filter)
     : delegate_(del)
     , t_(*this, *this)
     , message_(IDLE)
+    , filter_(filter)
     {        
         if(del == NULL)
             throw std::exception();

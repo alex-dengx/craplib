@@ -152,7 +152,7 @@ private:
     
 public:
     TestServer()
-    : sock_(this, "localhost", "9090")
+    : sock_(this, "9090")
     { 
         for(int i=0; i<5; ++i) 
             testReqVec.push_back( TestReqPtr( new TestReq() ) );
@@ -178,6 +178,55 @@ public:
 
 
 
+class ServerOnThread
+: public Runnable
+, public LASocket::Delegate
+{
+private:
+    NetworkInterface    if_;
+    Thread              t_;
+    
+public:
+    ServerOnThread(const NetworkInterface& nif)
+    : if_(nif)
+    , t_(*this)
+    {
+        t_.start();
+    }
+    
+    ~ServerOnThread()
+    {
+        t_.waitTermination();
+    }
+    
+    // Delegate methods
+    virtual void onDisconnect(const LASocket& s) {
+        wLog("0x%X: on disconnect", this);
+    }
+    
+    virtual void onNewClient(const LASocket& s, Socket& c) {
+        wLog("0x%X: on new client", this);        
+    }
+    
+    virtual void onError(const LASocket& s) {
+        wLog("0x%X: on error", this);        
+    }
+    
+    
+    virtual void run()
+    {
+        RunLoop runloop;
+        wLog("Starting runloop for interface: %s; listening on %s", 
+             if_.name().c_str(), if_.ip().c_str());
+        
+        LASocket sock(this, if_, "8090");
+        
+        runloop.run();
+    }
+};
+
+typedef SharedPtr<ServerOnThread> ServerOnThreadPtr;
+std::vector<ServerOnThreadPtr> servers;
 
 class GetInterfaces
 : public NetworkInterfaces::Delegate
@@ -187,13 +236,17 @@ private:
     
 public:
     GetInterfaces()
-    : nif_(this)
+    : nif_(this, NetworkInterface::IPv4)
     {  }
     
     // Delegate methods    
     virtual void onInterfaceDetected(const NetworkInterfaces& nif, const NetworkInterface& iface) 
     {
-        wLog("Got detected network interface: %s IP: %s", iface.name().c_str(), iface.ip().c_str());
+        wLog("Got detected network interface: %s IP: %s", 
+             iface.name().c_str(), iface.ip().c_str());
+        
+        // Start server for that
+        servers.push_back( ServerOnThreadPtr( new ServerOnThread(iface) ) );
     }
 };
 
