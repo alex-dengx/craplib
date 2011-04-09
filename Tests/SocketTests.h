@@ -225,8 +225,43 @@ public:
     }
 };
 
+class Server
+: public LASocket::Delegate
+{
+private:
+    NetworkInterface    if_;
+    LASocket            sock_;
+    
+public:
+    Server(const NetworkInterface& nif)
+    : if_(nif)
+    , sock_(this, if_, "8090")
+    {
+        wLog("Starting runloop for interface: %s; listening on %s", 
+             if_.name().c_str(), if_.ip().c_str());        
+    }
+    
+    ~Server()
+    {
+    }
+    
+    // Delegate methods
+    virtual void onDisconnect(const LASocket& s) {
+        wLog("0x%X: on disconnect", this);
+    }
+    
+    virtual void onNewClient(const LASocket& s, Socket& c) {
+        wLog("0x%X: on new client", this);        
+    }
+    
+    virtual void onError(const LASocket& s) {
+        wLog("0x%X: on error", this);        
+    }
+};
+
 typedef SharedPtr<ServerOnThread> ServerOnThreadPtr;
-std::vector<ServerOnThreadPtr> servers;
+typedef SharedPtr<Server> ServerPtr;
+std::vector<ServerPtr> servers;
 
 class GetInterfaces
 : public NetworkInterfaces::Delegate
@@ -246,7 +281,7 @@ public:
              iface.name().c_str(), iface.ip().c_str());
         
         // Start server for that
-        servers.push_back( ServerOnThreadPtr( new ServerOnThread(iface) ) );
+        servers.push_back( ServerPtr( new Server(iface) ) );
     }
 };
 

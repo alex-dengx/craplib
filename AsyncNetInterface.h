@@ -78,7 +78,10 @@ public:
     , if_(other.if_)
     , family_(other.family_)
     {
-        memcpy(&addr_, &other.addr_, sizeof( other.addr_ ));
+        if(family_==IPv4)
+            std::swap(addr_, *(struct sockaddr_in*)(&other.addr_));        
+        else if(family_==IPv6)
+            std::swap(addr6_, *(struct sockaddr_in6*)(&other.addr6_));                    
     }
        
     ~NetworkInterface()
