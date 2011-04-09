@@ -8,8 +8,10 @@
 #include "SimpleUnit.h"
 #include "MemoryTests.h"
 #include "DataTests.h"
-#include "SocketTests.h"
 
-// #include "RunLoopTests.h"
+//#include "RunLoopTests.h"
+
+//#include "SocketTests.h"
+#include "SSLTests.h"
 
 #endif // __TESTS_H__
