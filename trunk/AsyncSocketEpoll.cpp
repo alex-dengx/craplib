@@ -92,7 +92,7 @@ const Data RWSocket::write(const Data& bytes)
 {
     wantWrite_ = false;
     
-    int written = (int)send(sock_, bytes.get_data(), bytes.get_size(), 0);
+    int written = (int)send(sock_, bytes.get_data(), bytes.get_size(), MSG_NOSIGNAL);
     if(written < 0)
         return bytes; // Nothing is written - most likely socket is dead
     
@@ -106,7 +106,7 @@ size_t RWSocket::readData()
 {
     // Read data
     Data d(1024);
-    int r = (int)read(sock_, d.lock(), 1024);
+    int r = (int)recv(sock_, d.lock(), 1024, MSG_NOSIGNAL);
     readData_ = Data(d, 0, r);
     return r;
 }
@@ -324,7 +324,7 @@ LASocket::~LASocket()
 void LASocket::onRead()
 {
     // Indicates there is a new client
-    int cli = accept(sock_, NULL, NULL);
+    int cli = accept4(sock_, NULL, NULL, O_NONBLOCK);
     if(cli != -1) {
         Socket sock(cli);
         delegate_->onNewClient(*this, sock);        
