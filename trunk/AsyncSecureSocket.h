@@ -9,16 +9,26 @@
 #include "AsyncSSL.h"
 
 class SecureRWSocket
-: public RWSocket
+: public RWSocket::Delegate
 {
 private:
-    SSLContext&     ctx_;
+    RWSocket sock_;
+    SSLTube  ssl_;
     
 public:
     SecureRWSocket(Delegate* del, const std::string& host, const std::string& service, SSLContext& ctx) 
-    : RWSocket(del, host, service)
-    , ctx_(ctx)
-    { }
+    : sock_(this, host, service)
+    , ssl_()
+    { 
+        // 1) get data from sock_
+        // 2) tell ssl_ to perform handshake using that data
+    }
+    
+    // RWSocket delegate methods
+    virtual void onDisconnect(const RWSocket&);
+    virtual void onRead(const RWSocket&, const Data&);
+    virtual void onCanWrite(const RWSocket&);
+    virtual void onError(const RWSocket&);
 };
 
 #endif // __ASYNC_SECURE_SOCKET_H__
