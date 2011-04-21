@@ -11,11 +11,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <netinet/in.h>
 
 Socket::Socket()
 : sock_(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
@@ -63,7 +58,7 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }
     
     int set = 1;
-    // errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
     errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
     if ( errcode < 0)
     {
@@ -110,7 +105,6 @@ const Data RWSocket::write(const Data& bytes)
 size_t RWSocket::readData() 
 {
     // Read data
-    // TODO: move to member buffer
     Data d(1024);
     int r = (int)read(sock_, d.lock(), 1024);
     readData_ = Data(d, 0, r);
@@ -119,73 +113,62 @@ size_t RWSocket::readData()
 
 void SocketWorker::run() 
 {
+//    timespec ts;
+//    ts.tv_sec = 0;
+//    ts.tv_nsec = 1000;
+    
     while( true ) {
  
-        int maxSock = 0;
-        
         {
             // Wait till we have some clients
             CondLock lock(c_, true);
-            lock.set(!clients_.empty());
-        
-            FD_ZERO(&read_fd);
-            FD_ZERO(&write_fd);
-            FD_ZERO(&err_fd);
-        
-            for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {
-                FD_SET((*it)->sock_, &read_fd);
-                FD_SET((*it)->sock_, &write_fd);
-                FD_SET((*it)->sock_, &err_fd);                
-                
-                maxSock = maxSock > (*it)->sock_ ? maxSock:(*it)->sock_; // Achtung :)                
-            }
         }
-        
-        // Wait for read/write access                        
-        int changes = select(maxSock+1, &read_fd, &write_fd, &err_fd, NULL);
-        if(changes < 0) {
-            // Couldn't handle this connection
-            perror("select()");
+
+        struct epoll_event eqEvents_[1024];
+	int n = epoll_wait(eq_, eqEvents_, 1024, -1);
+	
+        if(n == 0) {
             continue;
         }
-        
-        // If not timeout
-        if(changes > 0) {
-            ActiveCall c(t_.msg_);
-            message_ = ONCHANGES;
-            
-            // TODO: swap instead of FD_COPY to speedup?
-	    std::swap(read_fd, read_fd_copy);
-	    std::swap(write_fd, write_fd_copy);
-	    std::swap(err_fd, err_fd_copy);
-
-            c.call();
+        else if(n < 0) { 
+            wLog("Err on epoll");
+            return;
         }
+        
+        ActiveCall c(t_.msg_);        
+        message_ = ONCHANGES;
+
+        for(int i=0; i<n; ++i) {
+
+            if(eqEvents_[i].events & EPOLLERR || eqEvents_[i].events & EPOLLHUP) { 
+                err_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+                continue;
+            }
+	    else if(eqEvents_[i].events & EPOLLIN || eqEvents_[i].events & EPOLLPRI) {
+
+                    read_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            }
+	    else if(eqEvents_[i].events & EPOLLOUT) {
+
+                    write_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            }                                        
+        }   
+        
+        wLog("epoll sizes n=%d; read=%d; write=%d; err=%d", n, read_.size(), write_.size(), err_.size());
+        c.call();
     }
 }
 
 void SocketWorker::handleChanges()
 {
-    for(Container::iterator it = clients_.begin(); it != clients_.end(); ++it) {        
-        if( FD_ISSET((*it)->sock_, &read_fd_copy) ) {                                      
-            read_.push_back(*it);
-        }
-                                
-        if( FD_ISSET((*it)->sock_, &write_fd_copy) ) {
-            write_.push_back(*it);
-        }
-        
-        if( FD_ISSET((*it)->sock_, &err_fd_copy) ) {
-            err_.push_back(*it);
-        }            
-    }   
-    
     /*
      * Process all read, write and error changes
      */
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
         
         if( cur->isListening() ) {
             cur->onRead(); // new client
@@ -210,6 +193,8 @@ void SocketWorker::handleChanges()
     while( !write_.empty() ) {
         SocketImpl* cur = write_.front();
         write_.pop_front();
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
         
         if( cur->wantWrite() ) {
             cur->onCanWrite();
@@ -218,12 +203,13 @@ void SocketWorker::handleChanges()
     
     while( !err_.empty() ) {
         SocketImpl* cur = err_.front();
-        err_.pop_front();
-        
+        err_.pop_front();        
+        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+            continue;
+
         cur->onError();
     }    
 }
-
 
 LASocket::LASocket(Delegate* del, const std::string& service)
 : delegate_(del)
@@ -234,12 +220,8 @@ LASocket::LASocket(Delegate* del, const std::string& service)
     
     struct sockaddr_in serverAddress = {};    
     serverAddress.sin_family = AF_INET;
-//    serverAddress.sin_len    = sizeof(serverAddress);
     serverAddress.sin_port = htons(atoi(service.c_str()));
     serverAddress.sin_addr.s_addr = INADDR_ANY; // Bind on all interfaces
-    
-    int set = 1;
-    // setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
@@ -269,7 +251,7 @@ LASocket::LASocket(Delegate* del, const std::string& service)
     statics().registerSocket(this);
 }
 
- 
+
 LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service)
 : delegate_(del)
 , if_(nif)
@@ -284,26 +266,23 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
     
     if(nif.family() == NetworkInterface::IPv4) {
         serverAddress.sin_family = AF_INET;
-        //serverAddress.sin_len    = sizeof(serverAddress);
         serverAddress.sin_port = htons(atoi(service.c_str()));
         serverAddress.sin_addr.s_addr = nif.addr()->sin_addr.s_addr;
-            
+        
         sockAddr = (struct sockaddr*)&serverAddress;        
         
     } else {        
-        /*serverAddress6.sin6_family = AF_INET6;
-        serverAddress6.sin6_len    = sizeof(serverAddress6);
+        serverAddress6.sin6_family = AF_INET6;
+        /*serverAddress6.sin6_len    = sizeof(serverAddress6);
         serverAddress6.sin6_port = htons(atoi(service.c_str()));
         serverAddress6.sin6_flowinfo = nif.addr6()->sin6_flowinfo;
         serverAddress6.sin6_scope_id = nif.addr6()->sin6_scope_id;
         serverAddress6.sin6_addr.__u6_addr = nif.addr6()->sin6_addr.__u6_addr;
-            
-        sockAddr = (struct sockaddr*)&serverAddress6;       
-	*/
+        */
+	wLog("ipv6 not supported in craplib for linux atm. sorry :)");
+
+        sockAddr = (struct sockaddr*)&serverAddress6;        
     }
-    
-    int set = 1;
-    //setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(sock_, (const struct sockaddr *)sockAddr, 
              nif.family()==NetworkInterface::IPv4 ? 
@@ -349,6 +328,8 @@ void LASocket::onRead()
     if(cli != -1) {
         Socket sock(cli);
         delegate_->onNewClient(*this, sock);        
+    } else {
+        perror("accept()");
     }
 }
 
