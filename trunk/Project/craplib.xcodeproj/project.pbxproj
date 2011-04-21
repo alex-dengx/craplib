@@ -14,11 +14,13 @@
 		24410A7C13325A010004C635 /* POSIX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A7B13325A010004C635 /* POSIX.cpp */; };
 		248C1A8A134FE3C200103E24 /* AsyncSSL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A88134FE3C200103E24 /* AsyncSSL.cpp */; };
 		248C1A8D134FE42400103E24 /* AsyncSecureSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */; };
-		24931BBF133BA4EE006FE5B0 /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24931BBE133BA4EE006FE5B0 /* AsyncSocket.cpp */; };
 		24931BC4133CB856006FE5B0 /* AsyncAddrInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */; };
 		24C5D3EA133A0E820017276F /* LogUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3E9133A0E820017276F /* LogUtil.cpp */; };
 		24C5D3ED133A117C0017276F /* Tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3EC133A117C0017276F /* Tests.cpp */; };
 		24CBC13D133295F8000872C5 /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24CBC13C133295F8000872C5 /* Timer.cpp */; };
+		24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */; };
+		24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C601360916100F992AD /* AsyncSocketKevent.cpp */; };
+		24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C621360921F00F992AD /* AsyncSocket.cpp */; };
 		370A2768133A4E0400DA5950 /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 370A2766133A4E0400DA5950 /* Data.cpp */; };
 /* End PBXBuildFile section */
 
@@ -60,7 +62,6 @@
 		248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSecureSocket.cpp; sourceTree = "<group>"; };
 		248C1A8C134FE42400103E24 /* AsyncSecureSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSecureSocket.h; sourceTree = "<group>"; };
 		248C1A8E134FEB6100103E24 /* server.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = server.pem; sourceTree = "<group>"; };
-		24931BBE133BA4EE006FE5B0 /* AsyncSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocket.cpp; sourceTree = "<group>"; };
 		24931BC1133BBCCC006FE5B0 /* StaticRefCounted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StaticRefCounted.h; sourceTree = "<group>"; };
 		24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncAddrInfo.h; sourceTree = "<group>"; };
 		24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncAddrInfo.cpp; sourceTree = "<group>"; };
@@ -78,6 +79,11 @@
 		24CBC13C133295F8000872C5 /* Timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Timer.cpp; sourceTree = "<group>"; };
 		24CBC13E13329B6E000872C5 /* Timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Timing.h; sourceTree = "<group>"; };
 		24CBC13F13329EFB000872C5 /* Compare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compare.h; sourceTree = "<group>"; };
+		24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocketSelect.cpp; sourceTree = "<group>"; };
+		24D43C5D13608FDB00F992AD /* AsyncSocketSelect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocketSelect.h; sourceTree = "<group>"; };
+		24D43C5F1360916100F992AD /* AsyncSocketKevent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocketKevent.h; sourceTree = "<group>"; };
+		24D43C601360916100F992AD /* AsyncSocketKevent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocketKevent.cpp; sourceTree = "<group>"; };
+		24D43C621360921F00F992AD /* AsyncSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocket.cpp; sourceTree = "<group>"; };
 		24DA6E9F1332EBB10078CE4A /* TLS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TLS.h; sourceTree = "<group>"; };
 		370A2766133A4E0400DA5950 /* Data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Data.cpp; sourceTree = "<group>"; };
 		370A2767133A4E0400DA5950 /* Data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Data.h; sourceTree = "<group>"; };
@@ -98,8 +104,12 @@
 		240F44A71349FD9C00541FA7 /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				24D43C601360916100F992AD /* AsyncSocketKevent.cpp */,
+				24D43C5F1360916100F992AD /* AsyncSocketKevent.h */,
+				24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */,
+				24D43C5D13608FDB00F992AD /* AsyncSocketSelect.h */,
+				24D43C621360921F00F992AD /* AsyncSocket.cpp */,
 				24C5D3F3133A243E0017276F /* AsyncSocket.h */,
-				24931BBE133BA4EE006FE5B0 /* AsyncSocket.cpp */,
 				24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */,
 				24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */,
 				240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */,
@@ -298,11 +308,13 @@
 				24C5D3EA133A0E820017276F /* LogUtil.cpp in Sources */,
 				24C5D3ED133A117C0017276F /* Tests.cpp in Sources */,
 				370A2768133A4E0400DA5950 /* Data.cpp in Sources */,
-				24931BBF133BA4EE006FE5B0 /* AsyncSocket.cpp in Sources */,
 				24931BC4133CB856006FE5B0 /* AsyncAddrInfo.cpp in Sources */,
 				240F44AB1349FDDE00541FA7 /* AsyncNetInterface.cpp in Sources */,
 				248C1A8A134FE3C200103E24 /* AsyncSSL.cpp in Sources */,
 				248C1A8D134FE42400103E24 /* AsyncSecureSocket.cpp in Sources */,
+				24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */,
+				24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */,
+				24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

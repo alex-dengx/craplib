@@ -1,8 +1,9 @@
 // This code is licensed under New BSD Licence. For details see project page at
 // http://code.google.com/p/craplib/source/checkout
 
-#ifdef __MACH__
-#include "AsyncSocketBSD.h"
+#ifdef _CRAP_SOCKET_KEVENT_
+
+#include "AsyncSocketKevent.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -221,9 +222,8 @@ void SocketWorker::handleChanges()
     }    
 }
 
-LASocket::LASocket(Delegate* del, const std::string& host, const std::string& service)
+LASocket::LASocket(Delegate* del, const std::string& service)
 : delegate_(del)
-, host_(host)
 , service_(service)
 {
     if(delegate_ == NULL)
@@ -233,11 +233,10 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_len    = sizeof(serverAddress);
     serverAddress.sin_port = htons(atoi(service.c_str()));
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
+    serverAddress.sin_addr.s_addr = INADDR_ANY; // Bind on all interfaces
     
     int set = 1;
     setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));    
     
     if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
@@ -257,7 +256,72 @@ LASocket::LASocket(Delegate* del, const std::string& host, const std::string& se
         return;
     }  
     
-    if( listen(sock_, 512) < 0 )
+    if( listen(sock_, 5) < 0 )
+    {
+        wLog("listen failed\n");
+        return;
+    }
+    
+    
+    statics().registerSocket(this);
+}
+
+
+LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service)
+: delegate_(del)
+, if_(nif)
+, service_(service)
+{
+    if(delegate_ == NULL)
+        throw std::exception();
+    
+    struct sockaddr* sockAddr = NULL;
+    struct sockaddr_in serverAddress = {};
+    struct sockaddr_in6 serverAddress6 = {};
+    
+    if(nif.family() == NetworkInterface::IPv4) {
+        serverAddress.sin_family = AF_INET;
+        serverAddress.sin_len    = sizeof(serverAddress);
+        serverAddress.sin_port = htons(atoi(service.c_str()));
+        serverAddress.sin_addr.s_addr = nif.addr()->sin_addr.s_addr;
+        
+        sockAddr = (struct sockaddr*)&serverAddress;        
+        
+    } else {        
+        serverAddress6.sin6_family = AF_INET6;
+        serverAddress6.sin6_len    = sizeof(serverAddress6);
+        serverAddress6.sin6_port = htons(atoi(service.c_str()));
+        serverAddress6.sin6_flowinfo = nif.addr6()->sin6_flowinfo;
+        serverAddress6.sin6_scope_id = nif.addr6()->sin6_scope_id;
+        serverAddress6.sin6_addr.__u6_addr = nif.addr6()->sin6_addr.__u6_addr;
+        
+        sockAddr = (struct sockaddr*)&serverAddress6;        
+    }
+    
+    int set = 1;
+    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    
+    if( bind(sock_, (const struct sockaddr *)sockAddr, 
+             nif.family()==NetworkInterface::IPv4 ? 
+             sizeof(serverAddress) : sizeof(serverAddress6)) < 0)
+    {
+        wLog("bind failed.");
+        return;
+    }
+    
+    // Make non-blocking         
+    int opts = fcntl(sock_,F_GETFL);
+    if (opts < 0) {
+        perror("fcntl(F_GETFL)");
+        return;
+    }
+    opts = (opts | O_NONBLOCK);
+    if (fcntl(sock_,F_SETFL,opts) < 0) {
+        perror("fcntl(F_SETFL)");
+        return;
+    }  
+    
+    if( listen(sock_, 5) < 0 )
     {
         wLog("listen failed\n");
         return;
@@ -285,4 +349,5 @@ void LASocket::onRead()
         perror("accept()");
     }
 }
-#endif
+
+#endif // _CRAP_SOCKET_KEVENT_
