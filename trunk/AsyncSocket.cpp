@@ -8,6 +8,12 @@
 #include <sys/select.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
 
 Socket::Socket()
 : sock_(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))

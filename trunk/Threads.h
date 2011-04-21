@@ -5,15 +5,15 @@
 #ifndef __THREADS_H__
 #define __THREADS_H__
 
-#ifdef __MACH__
+#if defined(__MACH__) || defined(__linux__) // Or just POSIX
 #include <pthread.h>
 #endif
 
 namespace crap {
 namespace Threads {
 
-#ifdef __MACH__ // Or just POSIX
-	typedef unsigned            counter;
+#if defined(__MACH__) || defined(__linux__) // Or just POSIX
+    typedef unsigned            counter;
     typedef pthread_t           thread_type;
     typedef pthread_attr_t      thread_attr_type;
     typedef pthread_mutex_t     mutex_type;
