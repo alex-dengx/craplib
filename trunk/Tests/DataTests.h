@@ -7,7 +7,7 @@
 
 #include "Data.h"
 
-SUITE(Data);
+SUITE(Data)
 
 // Data simple tests
 ////////////////////////////////////////////////////////////////////
@@ -26,12 +26,12 @@ TEST(Simple, Data) {
     rassert(d0 != d1);
     d0 = d1;
     rassert(d0 == d1);
-};
+}
 
 TEST(Assignment, Data) {
     Data d0(10, "hello");
     Data d1(d0);
-};
+}
 
 
 #endif // __MEMORY_TESTS_H__

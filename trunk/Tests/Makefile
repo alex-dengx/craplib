@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -DDEBUG
+CPPFLAGS = -pedantic -DDEBUG
 
 all:
 	@echo -e "Compiling Tests..."
