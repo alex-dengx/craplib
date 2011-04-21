@@ -12,6 +12,11 @@
 
 #elif defined(__linux__)
 
+#define _CRAP_SOCKET_EPOLL_
+#include "AsyncSocketEpoll.h"
+
+#else
+
 #define _CRAP_SOCKET_SELECT_
 #include "AsyncSocketSelect.h"
 
