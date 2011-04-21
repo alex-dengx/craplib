@@ -63,7 +63,7 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }
     
     int set = 1;
-    errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    // errcode = setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
     if ( errcode < 0)
     {
@@ -155,10 +155,10 @@ void SocketWorker::run()
             message_ = ONCHANGES;
             
             // TODO: swap instead of FD_COPY to speedup?
-            FD_COPY(&read_fd, &read_fd_copy);
-            FD_COPY(&write_fd, &write_fd_copy);
-            FD_COPY(&err_fd, &err_fd_copy);
-            
+	    std::swap(read_fd, read_fd_copy);
+	    std::swap(write_fd, write_fd_copy);
+	    std::swap(err_fd, err_fd_copy);
+
             c.call();
         }
     }
@@ -234,12 +234,12 @@ LASocket::LASocket(Delegate* del, const std::string& service)
     
     struct sockaddr_in serverAddress = {};    
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_len    = sizeof(serverAddress);
+//    serverAddress.sin_len    = sizeof(serverAddress);
     serverAddress.sin_port = htons(atoi(service.c_str()));
     serverAddress.sin_addr.s_addr = INADDR_ANY; // Bind on all interfaces
     
     int set = 1;
-    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    // setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
@@ -284,25 +284,26 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
     
     if(nif.family() == NetworkInterface::IPv4) {
         serverAddress.sin_family = AF_INET;
-        serverAddress.sin_len    = sizeof(serverAddress);
+        //serverAddress.sin_len    = sizeof(serverAddress);
         serverAddress.sin_port = htons(atoi(service.c_str()));
         serverAddress.sin_addr.s_addr = nif.addr()->sin_addr.s_addr;
             
         sockAddr = (struct sockaddr*)&serverAddress;        
         
     } else {        
-        serverAddress6.sin6_family = AF_INET6;
+        /*serverAddress6.sin6_family = AF_INET6;
         serverAddress6.sin6_len    = sizeof(serverAddress6);
         serverAddress6.sin6_port = htons(atoi(service.c_str()));
         serverAddress6.sin6_flowinfo = nif.addr6()->sin6_flowinfo;
         serverAddress6.sin6_scope_id = nif.addr6()->sin6_scope_id;
         serverAddress6.sin6_addr.__u6_addr = nif.addr6()->sin6_addr.__u6_addr;
             
-        sockAddr = (struct sockaddr*)&serverAddress6;        
+        sockAddr = (struct sockaddr*)&serverAddress6;       
+	*/
     }
     
     int set = 1;
-    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    //setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(sock_, (const struct sockaddr *)sockAddr, 
              nif.family()==NetworkInterface::IPv4 ? 

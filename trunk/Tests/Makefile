@@ -1,8 +1,9 @@
 CC = g++
-CPPFLAGS =
+CPPFLAGS = -DDEBUG
 
 all:
-	@$(CC) -o Tests Tests.cpp -I.. -L.. -lcrap
+	@echo -e "Compiling Tests..."
+	@$(CC) $(CPPFLAGS) -o Tests Tests.cpp -L.. -I.. -lcrap -lpthread
 
 clean:
 	@rm Tests

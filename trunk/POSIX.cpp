@@ -4,11 +4,12 @@
 #include "Threads.h"
 #include "Timing.h"
 
-#ifdef __MACH__
+#if defined(__MACH__) || defined(__linux__)
 
 #include <sys/time.h>
 #include <math.h>
 #include <errno.h>
+#include <signal.h>
 
 // Implementation is GCC-specific
 namespace crap {
