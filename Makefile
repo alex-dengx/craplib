@@ -12,7 +12,7 @@ all: $(OBJS) lib tests
 
 %.o: %.cpp
 	@echo "[+] Compile a component: $<"
-	@$(CC) -c $(CPPFLAGS) $< -o $(<:.cpp=.o) 2> /dev/null
+	@$(CC) -c $(CPPFLAGS) $< -o $(<:.cpp=.o)
 
 lib:
 	@$(AR) $(ARFLAGS) libcrap.a $(OBJS)
