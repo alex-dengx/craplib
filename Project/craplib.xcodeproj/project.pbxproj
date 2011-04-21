@@ -21,6 +21,7 @@
 		24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */; };
 		24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C601360916100F992AD /* AsyncSocketKevent.cpp */; };
 		24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C621360921F00F992AD /* AsyncSocket.cpp */; };
+		24D43C66136095C300F992AD /* AsyncSocketEpoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */; };
 		370A2768133A4E0400DA5950 /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 370A2766133A4E0400DA5950 /* Data.cpp */; };
 /* End PBXBuildFile section */
 
@@ -84,6 +85,8 @@
 		24D43C5F1360916100F992AD /* AsyncSocketKevent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocketKevent.h; sourceTree = "<group>"; };
 		24D43C601360916100F992AD /* AsyncSocketKevent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocketKevent.cpp; sourceTree = "<group>"; };
 		24D43C621360921F00F992AD /* AsyncSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocket.cpp; sourceTree = "<group>"; };
+		24D43C64136095C300F992AD /* AsyncSocketEpoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocketEpoll.h; sourceTree = "<group>"; };
+		24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocketEpoll.cpp; sourceTree = "<group>"; };
 		24DA6E9F1332EBB10078CE4A /* TLS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TLS.h; sourceTree = "<group>"; };
 		370A2766133A4E0400DA5950 /* Data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Data.cpp; sourceTree = "<group>"; };
 		370A2767133A4E0400DA5950 /* Data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Data.h; sourceTree = "<group>"; };
@@ -104,6 +107,8 @@
 		240F44A71349FD9C00541FA7 /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				24D43C64136095C300F992AD /* AsyncSocketEpoll.h */,
+				24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */,
 				24D43C601360916100F992AD /* AsyncSocketKevent.cpp */,
 				24D43C5F1360916100F992AD /* AsyncSocketKevent.h */,
 				24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */,
@@ -315,6 +320,7 @@
 				24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */,
 				24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */,
 				24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */,
+				24D43C66136095C300F992AD /* AsyncSocketEpoll.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

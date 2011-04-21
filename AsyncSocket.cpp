@@ -6,6 +6,10 @@
 #if defined(_CRAP_SOCKET_KEVENT_)
 #include "AsyncSocketKevent.cpp"
 
+#elif defined(_CRAP_SOCKET_EPOLL_)
+#include "AsyncSocketEpoll.cpp"
+
 #elif defined(_CRAP_SOCKET_SELECT_)
 #include "AsyncSocketSelect.cpp"
+
 #endif
