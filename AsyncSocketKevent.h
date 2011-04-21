@@ -1,11 +1,11 @@
 // This code is licensed under New BSD Licence. For details see project page at
 // http://code.google.com/p/craplib/source/checkout
 
-#ifdef __MACH__
+#ifdef _CRAP_SOCKET_KEVENT_
 
 #pragma once
-#ifndef __ASYNC_SOCKET_H__
-#define __ASYNC_SOCKET_H__
+#ifndef __ASYNC_SOCKET_KEVENT_H__
+#define __ASYNC_SOCKET_KEVENT_H__
 
 #include <string>
 #include <deque>
@@ -19,6 +19,7 @@
 #include "ActiveMsg.h"
 #include "LogUtil.h"
 #include "StaticRefCounted.h"
+#include "AsyncNetInterface.h"
 
 class RWSocket;
 class LASocket;
@@ -255,8 +256,8 @@ private:
     friend class SocketWorker;
     Delegate            *delegate_;
 
-    std::string         host_, 
-    service_;
+    NetworkInterface    if_;
+    std::string         service_;
     struct addrinfo     *addr_;
     
     // SocketWorker delegate methods
@@ -278,10 +279,11 @@ private:
     }
     
 public:
-    LASocket(Delegate* del, const std::string& host, const std::string& service);    
+    LASocket(Delegate* del, const std::string& service);
+    LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service);    
     virtual ~LASocket();
     
 };
 
-#endif // __ASYNC_SOCKET_H__
-#endif // __MACH__
+#endif // __ASYNC_SOCKET_KEVENT_H__
+#endif // _CRAP_SOCKET_KEVENT_
