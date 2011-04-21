@@ -5,7 +5,7 @@
 #ifndef __TLS_H__
 #define __TLS_H__
 
-#if !defined( __MACH__ )
+#if !defined( __MACH__ ) && !defined( __linux__ )
 #error This system is not MACH. Try using __thread keyword instead of ThreadLocalStorage template.
 #endif
 

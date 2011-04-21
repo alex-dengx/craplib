@@ -1,4 +1,5 @@
 #include "Data.h"
+#include <string.h>
 #include <algorithm>
 
 static int check_position(int pos, int size)

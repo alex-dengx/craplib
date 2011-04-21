@@ -2,6 +2,7 @@
 // http://code.google.com/p/craplib/source/checkout
 
 #include "LogUtil.h"
+#include <stdio.h>
 using namespace std;
 
 void LogUtil::log(const string& format, ...) 
