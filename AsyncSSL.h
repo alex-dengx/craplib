@@ -6,7 +6,9 @@
 #define __ASYNC_SSL_H__
 
 #include "StaticRefCounted.h"
+#include "Data.h"
 #include "LogUtil.h"
+
 #include <string>
 
 /**
@@ -43,6 +45,19 @@ public:
     {
         // TODO: free the context
     }
+};
+
+
+/**
+ * This class is used to completely decouple SSL byte-streams from transport layer
+ */
+class SSLTube
+{
+public:
+    bool readEncrypted(Data& bytes);       // Returns true if read something into bytes
+    bool readDecrypted(Data& bytes);       // ---- " ---- " ----
+    size_t writeEncrypted(Data& bytes);    // Returns written bytes count
+    size_t writeDecrypted(Data& bytes);    // ---- " ---- " ----
 };
 
 #endif // __ASYNC_SSL_H__
