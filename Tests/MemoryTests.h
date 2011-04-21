@@ -24,7 +24,7 @@ struct MemoryTester
 };
 bool MemoryTester::alive;
 
-SUITE(Memory);
+SUITE(Memory)
 
 // SharedPtr simple tests
 ////////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@ TEST(SharedPtr, Memory) {
     }
     
     rassert(MemoryTester::alive == false);
-};
+}
 
 // WeakPtr simple tests
 ////////////////////////////////////////////////////////////////////
@@ -56,6 +56,6 @@ TEST(WeakPtr, Memory) {
 
     rassert(wpv.front().lock() == false);
     rassert(MemoryTester::alive == false);
-};
+}
 
 #endif // __MEMORY_TESTS_H__

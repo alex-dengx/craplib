@@ -111,14 +111,14 @@ namespace unittest {
 			// Register the test into the corresponding vector
 			TestMan::getSuiteContainer<_Suite>().push_back( p );
 			
-		};
+		}
 
 		static void reg(const char* name, BaseTestSuite* p) {
 			
 			// Just add a pointer to the suite
 			TestMan::suites_.push_back( SuitePair( name, p) );
 			
-		};		
+		}		
 		
 		static void runall();
 		static void run(const char* name);
@@ -131,7 +131,7 @@ namespace unittest {
 			if(!condition) {
 				throw assert_exception( code, file, line );
 			}
-		};
+		}
 		
 		static void test_assert_throw(const char* file,
 									   const int line) throw (assert_exception)
@@ -159,7 +159,7 @@ namespace unittest {
 	{
 		if( fabsf( a - b) >= epsilon ) 
 			throw assert_exception("float values are not close enough", file, line);
-	};
+	}
 	
 	
 	////////////////////////////////////////////////////////////////////////////	
@@ -325,6 +325,6 @@ namespace unittest {
 			wLog("-----------------------------");
 		}
 	}
-};
+}
 
 #endif // __SIMPLE_UNIT_H__

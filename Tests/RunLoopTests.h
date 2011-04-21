@@ -10,7 +10,7 @@
 
 #include <vector>
 
-SUITE(RunLoop);
+SUITE(RunLoop)
 
 
 class Main
@@ -73,7 +73,7 @@ public:
 //    RunLoop rl;
 //    AsyncFile f("test.txt");
 //    rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
-//};
+//}
 
 
 // Basic runloop usage with timers and active objects (on main thread)
@@ -81,6 +81,6 @@ public:
 TEST(Basic, RunLoop) {
     Main m;
     m.run();
-};
+}
 
 #endif // __RUN_LOOP_TESTS_H__
