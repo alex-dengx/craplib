@@ -7,42 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		240F44AB1349FDDE00541FA7 /* AsyncNetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */; };
-		24410A65133250E10004C635 /* Thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A63133250E10004C635 /* Thread.cpp */; };
-		24410A6F133250F50004C635 /* RunLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A6A133250F50004C635 /* RunLoop.cpp */; };
-		24410A77133251D60004C635 /* test.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 24410A6E133250F50004C635 /* test.txt */; };
-		24410A7C13325A010004C635 /* POSIX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A7B13325A010004C635 /* POSIX.cpp */; };
-		248C1A8A134FE3C200103E24 /* AsyncSSL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A88134FE3C200103E24 /* AsyncSSL.cpp */; };
-		248C1A8D134FE42400103E24 /* AsyncSecureSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */; };
-		24931BC4133CB856006FE5B0 /* AsyncAddrInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */; };
-		24C5D3EA133A0E820017276F /* LogUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3E9133A0E820017276F /* LogUtil.cpp */; };
-		24C5D3ED133A117C0017276F /* Tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3EC133A117C0017276F /* Tests.cpp */; };
-		24CBC13D133295F8000872C5 /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24CBC13C133295F8000872C5 /* Timer.cpp */; };
-		24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */; };
-		24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C601360916100F992AD /* AsyncSocketKevent.cpp */; };
-		24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C621360921F00F992AD /* AsyncSocket.cpp */; };
-		24D43C66136095C300F992AD /* AsyncSocketEpoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */; };
-		370A2768133A4E0400DA5950 /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 370A2766133A4E0400DA5950 /* Data.cpp */; };
+		246F6E531365E19B0095F396 /* AsyncSSL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A88134FE3C200103E24 /* AsyncSSL.cpp */; };
+		246F6E551365E19B0095F396 /* AsyncSocketEpoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */; };
+		246F6E561365E19B0095F396 /* AsyncSocketKevent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C601360916100F992AD /* AsyncSocketKevent.cpp */; };
+		246F6E581365E19B0095F396 /* AsyncSocketSelect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */; };
+		246F6E5A1365E19B0095F396 /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C621360921F00F992AD /* AsyncSocket.cpp */; };
+		246F6E5D1365E19B0095F396 /* AsyncAddrInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */; };
+		246F6E5F1365E19B0095F396 /* AsyncNetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */; };
+		246F6E611365E19B0095F396 /* AsyncSecureSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */; };
+		246F6E631365E19B0095F396 /* LogUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3E9133A0E820017276F /* LogUtil.cpp */; };
+		246F6E651365E19B0095F396 /* RunLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A6A133250F50004C635 /* RunLoop.cpp */; };
+		246F6E691365E19B0095F396 /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24CBC13C133295F8000872C5 /* Timer.cpp */; };
+		246F6E6F1365E19B0095F396 /* Data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 370A2766133A4E0400DA5950 /* Data.cpp */; };
+		246F6E751365E19B0095F396 /* Thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A63133250E10004C635 /* Thread.cpp */; };
+		246F6E7A1365E19B0095F396 /* POSIX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A7B13325A010004C635 /* POSIX.cpp */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		24410A53133250CC0004C635 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-				24410A77133251D60004C635 /* test.txt in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncNetInterface.cpp; sourceTree = "<group>"; };
 		240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncNetInterface.h; sourceTree = "<group>"; };
 		2418D6881339098600116F34 /* Singleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Singleton.h; sourceTree = "<group>"; };
-		24410A55133250CC0004C635 /* craplib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = craplib; sourceTree = BUILT_PRODUCTS_DIR; };
 		24410A61133250E10004C635 /* Thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Thread.h; sourceTree = "<group>"; };
 		24410A62133250E10004C635 /* ExclusiveGuard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExclusiveGuard.h; sourceTree = "<group>"; };
 		24410A63133250E10004C635 /* Thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thread.cpp; sourceTree = "<group>"; };
@@ -57,6 +41,7 @@
 		24410A6D133250F50004C635 /* RunLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RunLoop.h; sourceTree = "<group>"; };
 		24410A6E133250F50004C635 /* test.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.txt; sourceTree = "<group>"; };
 		24410A7B13325A010004C635 /* POSIX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = POSIX.cpp; sourceTree = "<group>"; };
+		246F6E491365E12F0095F396 /* libcrap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcrap.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		248C1A85134FE31B00103E24 /* SSLTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSLTests.h; path = Tests/SSLTests.h; sourceTree = "<group>"; };
 		248C1A88134FE3C200103E24 /* AsyncSSL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSSL.cpp; sourceTree = "<group>"; };
 		248C1A89134FE3C200103E24 /* AsyncSSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSSL.h; sourceTree = "<group>"; };
@@ -95,7 +80,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		24410A52133250CC0004C635 /* Frameworks */ = {
+		246F6E461365E12F0095F396 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -137,7 +122,7 @@
 		24410A56133250CC0004C635 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				24410A55133250CC0004C635 /* craplib */,
+				246F6E491365E12F0095F396 /* libcrap.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -271,23 +256,33 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		246F6E471365E12F0095F396 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
-		24410A54133250CC0004C635 /* craplib */ = {
+		246F6E481365E12F0095F396 /* crap */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 24410A5E133250CC0004C635 /* Build configuration list for PBXNativeTarget "craplib" */;
+			buildConfigurationList = 246F6E4C1365E12F0095F396 /* Build configuration list for PBXNativeTarget "crap" */;
 			buildPhases = (
-				24410A51133250CC0004C635 /* Sources */,
-				24410A52133250CC0004C635 /* Frameworks */,
-				24410A53133250CC0004C635 /* CopyFiles */,
+				246F6E451365E12F0095F396 /* Sources */,
+				246F6E461365E12F0095F396 /* Frameworks */,
+				246F6E471365E12F0095F396 /* Headers */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = craplib;
-			productName = craplib;
-			productReference = 24410A55133250CC0004C635 /* craplib */;
-			productType = "com.apple.product-type.tool";
+			name = crap;
+			productName = crap;
+			productReference = 246F6E491365E12F0095F396 /* libcrap.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -306,31 +301,30 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				24410A54133250CC0004C635 /* craplib */,
+				246F6E481365E12F0095F396 /* crap */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		24410A51133250CC0004C635 /* Sources */ = {
+		246F6E451365E12F0095F396 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				24410A65133250E10004C635 /* Thread.cpp in Sources */,
-				24410A6F133250F50004C635 /* RunLoop.cpp in Sources */,
-				24410A7C13325A010004C635 /* POSIX.cpp in Sources */,
-				24CBC13D133295F8000872C5 /* Timer.cpp in Sources */,
-				24C5D3EA133A0E820017276F /* LogUtil.cpp in Sources */,
-				24C5D3ED133A117C0017276F /* Tests.cpp in Sources */,
-				370A2768133A4E0400DA5950 /* Data.cpp in Sources */,
-				24931BC4133CB856006FE5B0 /* AsyncAddrInfo.cpp in Sources */,
-				240F44AB1349FDDE00541FA7 /* AsyncNetInterface.cpp in Sources */,
-				248C1A8A134FE3C200103E24 /* AsyncSSL.cpp in Sources */,
-				248C1A8D134FE42400103E24 /* AsyncSecureSocket.cpp in Sources */,
-				24D43C5E13608FDB00F992AD /* AsyncSocketSelect.cpp in Sources */,
-				24D43C611360916100F992AD /* AsyncSocketKevent.cpp in Sources */,
-				24D43C631360921F00F992AD /* AsyncSocket.cpp in Sources */,
-				24D43C66136095C300F992AD /* AsyncSocketEpoll.cpp in Sources */,
+				246F6E531365E19B0095F396 /* AsyncSSL.cpp in Sources */,
+				246F6E551365E19B0095F396 /* AsyncSocketEpoll.cpp in Sources */,
+				246F6E561365E19B0095F396 /* AsyncSocketKevent.cpp in Sources */,
+				246F6E581365E19B0095F396 /* AsyncSocketSelect.cpp in Sources */,
+				246F6E5A1365E19B0095F396 /* AsyncSocket.cpp in Sources */,
+				246F6E5D1365E19B0095F396 /* AsyncAddrInfo.cpp in Sources */,
+				246F6E5F1365E19B0095F396 /* AsyncNetInterface.cpp in Sources */,
+				246F6E611365E19B0095F396 /* AsyncSecureSocket.cpp in Sources */,
+				246F6E631365E19B0095F396 /* LogUtil.cpp in Sources */,
+				246F6E651365E19B0095F396 /* RunLoop.cpp in Sources */,
+				246F6E691365E19B0095F396 /* Timer.cpp in Sources */,
+				246F6E6F1365E19B0095F396 /* Data.cpp in Sources */,
+				246F6E751365E19B0095F396 /* Thread.cpp in Sources */,
+				246F6E7A1365E19B0095F396 /* POSIX.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,23 +365,25 @@
 			};
 			name = Release;
 		};
-		24410A5F133250CC0004C635 /* Debug */ = {
+		246F6E4A1365E12F0095F396 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				EXECUTABLE_PREFIX = lib;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		24410A60133250CC0004C635 /* Release */ = {
+		246F6E4B1365E12F0095F396 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -403,16 +399,16 @@
 				24410A5D133250CC0004C635 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		24410A5E133250CC0004C635 /* Build configuration list for PBXNativeTarget "craplib" */ = {
+		246F6E4C1365E12F0095F396 /* Build configuration list for PBXNativeTarget "crap" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				24410A5F133250CC0004C635 /* Debug */,
-				24410A60133250CC0004C635 /* Release */,
+				246F6E4A1365E12F0095F396 /* Debug */,
+				246F6E4B1365E12F0095F396 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
