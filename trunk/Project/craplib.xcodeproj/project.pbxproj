@@ -88,6 +88,7 @@
 		24D43C64136095C300F992AD /* AsyncSocketEpoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocketEpoll.h; sourceTree = "<group>"; };
 		24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSocketEpoll.cpp; sourceTree = "<group>"; };
 		24DA6E9F1332EBB10078CE4A /* TLS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TLS.h; sourceTree = "<group>"; };
+		24F210551365CDF60037AC58 /* FileTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileTests.h; path = Tests/FileTests.h; sourceTree = "<group>"; };
 		370A2766133A4E0400DA5950 /* Data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Data.cpp; sourceTree = "<group>"; };
 		370A2767133A4E0400DA5950 /* Data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Data.h; sourceTree = "<group>"; };
 		370A276A133A4E5300DA5950 /* nocopy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nocopy.h; sourceTree = "<group>"; };
@@ -147,7 +148,6 @@
 				24C5D3EB133A10F20017276F /* Tests */,
 				24410A73133251390004C635 /* Source */,
 				24410A7B13325A010004C635 /* POSIX.cpp */,
-				24410A6B133250F50004C635 /* AsyncFile.h */,
 				24410A721332512C0004C635 /* Resources */,
 			);
 			name = craplib;
@@ -166,6 +166,7 @@
 		24410A73133251390004C635 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				24F210521365BD300037AC58 /* Files */,
 				248C1A87134FE3A000103E24 /* Crypto */,
 				240F44A71349FD9C00541FA7 /* Network */,
 				24C5D3E7133A0E700017276F /* Logging */,
@@ -248,6 +249,7 @@
 		24C5D3EB133A10F20017276F /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				24F210551365CDF60037AC58 /* FileTests.h */,
 				24C5D3F1133A15B70017276F /* MemoryTests.h */,
 				24C5D3F2133A17810017276F /* RunLoopTests.h */,
 				24A184A3133A623B00B6C356 /* DataTests.h */,
@@ -257,6 +259,14 @@
 				24C5D3EC133A117C0017276F /* Tests.cpp */,
 			);
 			name = Tests;
+			sourceTree = "<group>";
+		};
+		24F210521365BD300037AC58 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				24410A6B133250F50004C635 /* AsyncFile.h */,
+			);
+			name = Files;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

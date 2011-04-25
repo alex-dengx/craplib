@@ -9,8 +9,10 @@
 #include "MemoryTests.h"
 #include "DataTests.h"
 
+#include "FileTests.h"
+
 //#include "RunLoopTests.h"
-#include "SocketTests.h"
+//#include "SocketTests.h"
 //#include "SSLTests.h"
 
 #endif // __TESTS_H__

@@ -7,86 +7,77 @@
 
 #include "Thread.h"
 #include "ActiveMsg.h"
+#include "Timer.h"
 #include "LogUtil.h"
 
-#include <fstream>
-
-class AsyncFile 
-: public Runnable
-, public ActiveMsgDelegate
+class AsyncFileReader
+// : public ActiveMsgDelegate
+: public TimerDelegate
 {
-private:    
-    std::ifstream   stream_;
-  
-    enum message_enum { START, CHUNK, COMPLETE };
-    message_enum        message;    
-    std::string         chunk_; // 5 chars on iteration dude! :-)
-        
-    ThreadWithMessage   t_;
+public:
+    struct Delegate {
+        virtual void onChunk(const AsyncFileReader&, const Data&) = 0;
+        virtual void onError(const AsyncFileReader&) = 0;
+        virtual void onEndOfFile(const AsyncFileReader&) = 0;
+        virtual ~Delegate() {};
+    };
     
-    virtual void onCall(const ActiveMsg& msg) {
-        switch(message) {
-            case START:
-                wLog("Starting to read file..");
-                break;
-                
-            case CHUNK:
-//                std::cout << this << " :: Written chunk = '" << chunk_.size() << "'\n";
-                break;
-                
-            case COMPLETE:
-                wLog("Complete!");
-                break;
+private:    
+//    enum message_enum { START, CHUNK, COMPLETE };
+//    message_enum        message;    
+    
+    Delegate            *delegate_;
+    FILE                *fp_;
+    Data                buffer_;
+    Timer               timer_;
+    int                 bsz_;
+    
+//    virtual void onCall(const ActiveMsg& msg) {
+//        switch(message) {
+//            case START:
+//                break;
+//                
+//            case CHUNK:
+//                break;
+//                
+//            case COMPLETE:
+//                break;
+//        }
+//    }
+    
+    virtual void onTimer(const Timer& timer) {
+        if( bsz_ == 0) {
+            if(feof(fp_)) {
+                delegate_->onEndOfFile(*this);
+            } else {
+                delegate_->onError(*this);
+            }
+        } else {
+            buffer_ = Data(buffer_, 0, bsz_);
+            delegate_->onChunk(*this, buffer_);
         }
     }
 public:
-    AsyncFile(const std::string& filename)
-    : stream_(filename.c_str())
-    , t_(*this, *this)
-    {
-        if(!stream_.is_open())
+    AsyncFileReader(Delegate* del, const std::string& filename)
+    : delegate_(del)
+    , timer_(*this)
+    {        
+        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
             throw std::exception();
-     
-        t_.start();
+        }
     }
 
-    ~AsyncFile()
+    ~AsyncFileReader()
     {
-        t_.requestTermination();
-        t_.waitTermination();
+        if(fp_)
+            fclose(fp_);
     }
+    
+    void read(int size) {        
+        buffer_ = Data(size);
 
-    virtual void run() 
-    {
-        {
-            ActiveCall call(t_.msg_);
-            message = START;
-            ///...
-            call.call();
-        }
-
-        // FIXME: looks like a very shitty way of reading data :-/
-        char data[5];
-        while( !stream_.eof() ) {
-            std::streamsize r = stream_.readsome(data, 5);
-            
-            if(r==0)
-                break;
-            
-            ActiveCall call(t_.msg_);
-            message = CHUNK;
-            
-            chunk_.assign(data, r);          
-
-            call.call(); // Tell the runloop we want to be called now
-        } 
-
-        // Nop
-        {
-            ActiveCall call(t_.msg_);
-            message = COMPLETE;
-            call.call();
-        }
+        bsz_ = (int)fread(buffer_.lock(), 1, size, fp_);        
+        timer_.set(0);
     }
 };
 
