@@ -21,16 +21,9 @@ private:
     
 public:
     TestReq()
-    : sock_(this, "localhost", "9090")
-    {
-        Data ldata(4096);   // 4k of 1s
-        ldata.fill(1);
-        ldata.lock()[4095] = '\n';
-        std::string large((char*)ldata.get_data(), 4096);
-        
-        cmds_.push("first line\n");
-        cmds_.push("second test\n");
-        cmds_.push(large);
+    : sock_(this, "www.google.com", "80")
+    {        
+        cmds_.push("GET / HTTP/1.0\n\n");
         
         data_ = Data((int)cmds_.front().length(), cmds_.front().c_str());
         lastCmd_ = cmds_.front();
@@ -51,29 +44,7 @@ public:
     virtual void onRead(const RWSocket& sock, const Data& d)
     {
         if(&sock == &sock_) {   
-
-            std::string str((char*)d.get_data(), d.get_size());
-                
-            Data tmp = Data(data_.get_size(), data_.get_data());
-            data_ = Data(d.get_size() + data_.get_size());
-            data_.copy(tmp.get_size(), d);
-            data_.copy(0, tmp);
-             
-            if( *str.rbegin() != '\n' ) {
-                wLog("appended %d bytes. total bytes now %d", d.get_size(), data_.get_size());
-                return;
-            }
-            
-            std::string fullStr((char*)data_.get_data(), data_.get_size());
-            rassert( fullStr == lastCmd_ );
-            
-            if(!cmds_.empty()) {
-                data_ = Data((int)cmds_.front().length(), cmds_.front().c_str());
-                lastCmd_ = cmds_.front();
-                cmds_.pop();   
-                
-                data_ = sock_.write(data_);
-            } 
+            wLog("got %d bytes", d.get_size());
         }
     }
     
@@ -289,6 +260,12 @@ public:
 
 SUITE(Socket);
 
+TEST(Request, Socket) {
+    RunLoop rl;
+    TestReq req;
+    rl.run();
+}
+
 // Server socket testing - simple echo server
 ////////////////////////////////////////////////////////////////////
 //TEST(Server, Socket) {
@@ -299,13 +276,13 @@ SUITE(Socket);
 //    
 //};
 
-TEST(GetInterfaces, Socket) {
-    
-    RunLoop rl;
-    GetInterfaces gif;
-    rl.run();
-    
-};
+//TEST(GetInterfaces, Socket) {
+//    
+//    RunLoop rl;
+//    GetInterfaces gif;
+//    rl.run();
+//    
+//};
 
 
 
