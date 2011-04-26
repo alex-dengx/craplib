@@ -40,16 +40,14 @@ Socket::~Socket()
 RWSocket::RWSocket(Delegate* del, Socket& sock) 
 : SocketImpl(sock)
 , delegate_(del)
-, addr_(NULL)
+, addr_(0)
 {
     statics().registerSocket(this);
 }
 
 RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& service)
 : delegate_(del)
-, host_(host)
-, service_(service)
-, addr_(NULL)
+, addr_(0)
 {
     struct addrinfo hints = {};
     
@@ -59,7 +57,7 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     hints.ai_flags |= AI_V4MAPPED;
     
     // TODO: what if we use IP instead of hostname?
-    int errcode = getaddrinfo (host_.c_str(), service_.c_str(), &hints, &addr_);
+    int errcode = getaddrinfo (host.c_str(), service.c_str(), &hints, &addr_);
     if (errcode != 0)
     {
         wLog("getaddrinfo failed");
@@ -68,10 +66,10 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     
     int set = 1;
 #ifndef __linux__
-    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 #endif
-    setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
-    errcode = connect(sock_, addr_->ai_addr, addr_->ai_addrlen);
+    setsockopt(s.get_sock(), SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
+    errcode = connect(s.get_sock(), addr_->ai_addr, addr_->ai_addrlen);
     if ( errcode < 0)
     {
         wLog("connect failed, will get error on write");
@@ -79,13 +77,13 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     }          
     
     // Make non-blocking         
-    int opts = fcntl(sock_,F_GETFL);
+    int opts = fcntl(s.get_sock(),F_GETFL);
     if (opts < 0) {
         perror("fcntl(F_GETFL)");
         return;
     }
     opts = (opts | O_NONBLOCK);
-    if (fcntl(sock_,F_SETFL,opts) < 0) {
+    if (fcntl(s.get_sock(),F_SETFL,opts) < 0) {
         perror("fcntl(F_SETFL)");
         return;
     }  
@@ -100,34 +98,31 @@ RWSocket::~RWSocket()
         freeaddrinfo(addr_);
 }
 
-const Data RWSocket::write(const Data& bytes)
+int RWSocket::write(Data & data)
 {
-    wantWrite_ = false;
-    
 #ifdef __linux__
-    int written = (int)send(sock_, bytes.get_data(), bytes.get_size(), MSG_NOSIGNAL);
+    int written = (int)send(s.get_sock(), data.get_data(), data.get_size(), MSG_NOSIGNAL);
 #else
-    int written = (int)send(sock_, bytes.get_data(), bytes.get_size(), 0);
+    int written = (int)send(s.get_sock(), data.get_data(), data.get_size(), 0);
 #endif
-    if(written < 0)
-        return bytes; // Nothing is written - most likely socket is dead
-    
-    if(bytes.get_size()-written > 0)
-        wantWrite_ = true;
-    
-    return Data(bytes, written, bytes.get_size()-written);
+	if(written < 0) // Nothing is written - most likely socket is dead
+		return 0;
+	data = Data(data, written, data.get_size());
+	return written;
 }
 
-size_t RWSocket::readData() 
+int RWSocket::read(Data & data) 
 {
     // Read data
     Data d(1024);
 #ifdef __linux__
-    int r = (int)recv(sock_, d.lock(), 1024, MSG_NOSIGNAL);
+    int r = (int)recv(s.get_sock(), d.lock(), d.get_size(), MSG_NOSIGNAL);
 #else
-    int r = (int)read(sock_, d.lock(), 1024);
+    int r = (int)::read(s.get_sock(), d.lock(), d.get_size());
 #endif
-    readData_ = Data(d, 0, r);
+	if(r < 0) // Nothing is read - most likely socket is dead
+		return 0;
+    data = Data(d, 0, r);
     return r;
 }
 
@@ -137,7 +132,6 @@ LASocket::LASocket(Delegate* del, const std::string& service)
 {
     if(delegate_ == NULL)
         throw std::exception();
-    
     struct sockaddr_in serverAddress = {};    
     serverAddress.sin_family = AF_INET;
 #ifndef __linux__
@@ -147,27 +141,27 @@ LASocket::LASocket(Delegate* del, const std::string& service)
     serverAddress.sin_addr.s_addr = INADDR_ANY; // Bind on all interfaces
     
     int set = 1;
-    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
-    if( bind(sock_, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+    if( bind(s.get_sock(), (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
         wLog("bind failed.");
         return;
     }
     
     // Make non-blocking         
-    int opts = fcntl(sock_,F_GETFL);
+    int opts = fcntl(s.get_sock(),F_GETFL);
     if (opts < 0) {
         perror("fcntl(F_GETFL)");
         return;
     }
     opts = (opts | O_NONBLOCK);
-    if (fcntl(sock_,F_SETFL,opts) < 0) {
+    if (fcntl(s.get_sock(),F_SETFL,opts) < 0) {
         perror("fcntl(F_SETFL)");
         return;
     }  
     
-    if( listen(sock_, 5) < 0 )
+    if( listen(s.get_sock(), 5) < 0 )
     {
         wLog("listen failed\n");
         return;
@@ -215,9 +209,9 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
     }
     
     int set = 1;
-    setsockopt(sock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
-    if( bind(sock_, (const struct sockaddr *)sockAddr, 
+    if( bind(s.get_sock(), (const struct sockaddr *)sockAddr, 
              nif.family()==NetworkInterface::IPv4 ? 
              sizeof(serverAddress) : sizeof(serverAddress6)) < 0)
     {
@@ -226,18 +220,18 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
     }
     
     // Make non-blocking         
-    int opts = fcntl(sock_,F_GETFL);
+    int opts = fcntl(s.get_sock(), F_GETFL);
     if (opts < 0) {
         perror("fcntl(F_GETFL)");
         return;
     }
     opts = (opts | O_NONBLOCK);
-    if (fcntl(sock_,F_SETFL,opts) < 0) {
+    if (fcntl(s.get_sock(), F_SETFL, opts) < 0) {
         perror("fcntl(F_SETFL)");
         return;
     }  
     
-    if( listen(sock_, 5) < 0 )
+    if( listen(s.get_sock(), 5) < 0 )
     {
         wLog("listen failed\n");
         return;
@@ -254,13 +248,13 @@ LASocket::~LASocket()
 }
 
 
-void LASocket::onRead()
+void LASocket::onCanRead()
 {
     // Indicates there is a new client
 #ifndef __linux__
-    int cli = accept(sock_, NULL, NULL);
+    int cli = accept(s.get_sock(), NULL, NULL);
 #else
-    int cli = accept4(sock_, NULL, NULL, O_NONBLOCK);
+    int cli = accept4(s.get_sock(), NULL, NULL, O_NONBLOCK);
 #endif
     if(cli != -1) {
         Socket sock(cli);

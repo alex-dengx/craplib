@@ -101,15 +101,16 @@ private:
 			struct addrinfo * local_res = 0;
 			struct addrinfo hints = {};
 			
-			hints.ai_family = AF_INET6;
+			hints.ai_family = AF_UNSPEC;// AF_INET6;
 			hints.ai_protocol = IPPROTO_TCP;
 			hints.ai_socktype = SOCK_STREAM;
-			//		hints.ai_flags |= AI_CANONNAME;
-			sleep(2); // Imitate delay
-			int errcode = getaddrinfo ("gregmacboo.local", "3333", &hints, &local_res);
+//			hints.ai_flags |= AI_V4MAPPED; //AI_V4MAPPED;//AI_ALL;//AI_CANONNAME;
+//			sleep(2); // Imitate delay
+			wLog("BEFORE getaddrinfo %s:%s", local_work.host.c_str(), local_work.service.c_str());
+			int errcode = getaddrinfo (local_work.host.c_str(), local_work.service.c_str(), &hints, &local_res);
 			if (errcode != 0)
 			{
-				printf ("getaddrinfo failed");
+				printf ("getaddrinfo failed\n");
 				//					return;
 			}
 			//				freeaddrinfo(res); res = 0; // memory BUG :)

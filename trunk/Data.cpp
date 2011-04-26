@@ -10,7 +10,7 @@ static int check_position(int pos, int size)
 }
 
 Data::Impl::Impl(int size)
-: data( new unsigned char[size] )
+: data( new unsigned char[size] ) // Uninitialized to save time
 , size( size )
 { }
 
@@ -106,4 +106,42 @@ int Data::compare(const Data & other)const
 	if( size == other.size )
 		return memcmp(get_data(), other.get_data(), size);
 	return size - other.size;
+}
+
+void DataDeque::write(const Data & data)
+{
+	m_data.push_back( data );
+	size += data.get_size();
+}
+
+void DataDeque::read(Data & data, int max_size)
+{
+	if( m_data.empty() )
+	{
+		data = Data();
+		return;
+	}
+	Data & fr = m_data.front();
+	if( fr.get_size() <= max_size )
+	{
+		data = fr;
+		m_data.pop_front();
+		size -= data.get_size();
+		return;
+	}
+	data = Data(fr, 0, max_size);
+	fr = Data(fr, max_size, fr.get_size() - max_size);
+	size -= max_size;	
+}
+
+void DataDeque::read(Data & data)
+{
+	if( m_data.empty() )
+	{
+		data = Data();
+		return;
+	}
+	data = m_data.front();
+	m_data.pop_front();
+	size -= data.get_size();
 }

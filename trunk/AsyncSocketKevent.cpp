@@ -29,7 +29,7 @@ void SocketWorker::run()
         }
         
         ActiveCall c(t_.msg_);        
-        message_ = ONCHANGES;
+//        message_ = ONCHANGES;
 
         for(int i=0; i<n; ++i) {
 
@@ -61,7 +61,7 @@ void SocketWorker::run()
     }
 }
 
-void SocketWorker::handleChanges()
+void SocketWorker::onCall(const ActiveMsg& msg)
 {
     /*
      * Process all read, write and error changes
@@ -69,11 +69,11 @@ void SocketWorker::handleChanges()
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
+//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+//            continue;
+		cur->onCanRead();
         
-        if( cur->isListening() ) {
-            cur->onRead(); // new client
+/*        if( cur->isListening() ) {
             
         } else {
             
@@ -89,28 +89,25 @@ void SocketWorker::handleChanges()
                 cur->onError();                
                 deregisterSocket(cur);
             }
-        }        
+        }        */
     }
     
     while( !write_.empty() ) {
         SocketImpl* cur = write_.front();
         write_.pop_front();
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
-        
-        if( cur->wantWrite() ) {
-            cur->onCanWrite();
-        }
+//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+//            continue;
+		cur->onCanWrite();
     }
     
     while( !err_.empty() ) {
         SocketImpl* cur = err_.front();
         err_.pop_front();        
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
+//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
+//            continue;
 
-        cur->onError();
         deregisterSocket(cur);
+		cur->onDisconnect();
     }    
 }
 

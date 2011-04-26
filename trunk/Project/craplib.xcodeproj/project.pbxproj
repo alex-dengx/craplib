@@ -130,8 +130,8 @@
 			children = (
 				24D43C64136095C300F992AD /* AsyncSocketEpoll.h */,
 				24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */,
-				24D43C601360916100F992AD /* AsyncSocketKevent.cpp */,
 				24D43C5F1360916100F992AD /* AsyncSocketKevent.h */,
+				24D43C601360916100F992AD /* AsyncSocketKevent.cpp */,
 				24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */,
 				24D43C5D13608FDB00F992AD /* AsyncSocketSelect.h */,
 				24D43C621360921F00F992AD /* AsyncSocket.cpp */,
@@ -520,6 +520,7 @@
 				246F6EB11365F6560095F396 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
