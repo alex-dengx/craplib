@@ -6,18 +6,8 @@
 #include "AsyncSocketKevent.h"
 
 void SocketWorker::run() 
-{
-//    timespec ts;
-//    ts.tv_sec = 0;
-//    ts.tv_nsec = 1000;
-    
+{   
     while( true ) {
- 
-        {
-            // Wait till we have some clients
-            CondLock lock(c_, true);
-        }
-
         struct kevent kqEvents_[1024];
         int n = kevent(kq_, 0, 0, kqEvents_, 1024, NULL); // &ts        
         if(n == 0) {
@@ -29,7 +19,6 @@ void SocketWorker::run()
         }
         
         ActiveCall c(t_.msg_);        
-//        message_ = ONCHANGES;
 
         for(int i=0; i<n; ++i) {
 
@@ -68,20 +57,23 @@ void SocketWorker::onCall(const ActiveMsg& msg)
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
-		cur->onCanRead();
+        if( clients_.find(cur) != clients_.end() )
+            cur->onCanRead();
     }
     
     while( !write_.empty() ) {
         SocketImpl* cur = write_.front();
         write_.pop_front();
-		cur->onCanWrite();
+        if( clients_.find(cur) != clients_.end() )
+            cur->onCanWrite();
     }
     
     while( !err_.empty() ) {
         SocketImpl* cur = err_.front();
         err_.pop_front();        
         deregisterSocket(cur);
-		cur->onDisconnect();
+        if( clients_.find(cur) != clients_.end() )
+            cur->onDisconnect();
     }    
 }
 
