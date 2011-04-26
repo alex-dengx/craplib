@@ -114,7 +114,7 @@ int RWSocket::write(Data & data)
 int RWSocket::read(Data & data) 
 {
     // Read data
-    Data d(1024);
+    Data d(4096);
 #ifdef __linux__
     int r = (int)recv(s.get_sock(), d.lock(), d.get_size(), MSG_NOSIGNAL);
 #else
