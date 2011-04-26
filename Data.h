@@ -6,6 +6,7 @@
 #define __DATA_H__
 
 #include "SharedPtr.h"
+#include <list>
 
 namespace crap {
     
@@ -64,6 +65,21 @@ namespace crap {
         bool operator>=(const Data & other)const{return compare( other ) >= 0;}
     };
     
+	class DataDeque
+	{
+	public:
+		DataDeque():size(0) {}
+		void write(const Data & data);
+		void read(Data & data, int max_size);
+		void read(Data & data);
+		int get_size()const { return size; }
+	private:
+		std::list<Data> m_data;
+		int size;
+//		unsigned char * m_buffer;
+//		int m_free_bytes;
+	};
+
 } // namespace crap
 using namespace crap;
 

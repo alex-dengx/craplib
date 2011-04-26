@@ -71,7 +71,8 @@ void SocketWorker::handleChanges()
         if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
             continue;
         
-        if( cur->isListening() ) {
+		cur->onRead(); // new client
+/*        if( cur->isListening() ) {
             cur->onRead(); // new client
             
         } else {
@@ -88,7 +89,7 @@ void SocketWorker::handleChanges()
                 cur->onError();                
                 deregisterSocket(cur);
             }
-        }        
+        } */
     }
     
     while( !write_.empty() ) {

@@ -24,12 +24,7 @@ class SocketWorker;
  */
 class Socket 
 {
-    friend class RWSocket;
-    
-protected:
-    int sock_;
-    
-public:    
+public:
     Socket();    
     Socket(Socket& other) 
     : sock_(0) 
@@ -37,35 +32,37 @@ public:
         std::swap(this->sock_, other.sock_);
     }
     explicit Socket(int sock);
-    virtual ~Socket();
+    ~Socket();
+	int get_sock()const { return sock_; }
+private:
+    int sock_;    
 };
 
 /**
  * Base socket with delegate methods
  */
 class SocketImpl
-: public Socket
 {   
 protected:
+	Socket s;
     friend class SocketWorker;
     
 public:
-    SocketImpl() {};
+    SocketImpl() {}
     
     SocketImpl(Socket& sock)
-    : Socket(sock) { };
+    : s(sock) { }
     
-    virtual ~SocketImpl() {};
+    virtual ~SocketImpl() {}
     
 private:
-    virtual size_t readData() { /* nop */ return 0; }
-    virtual bool wantWrite() const { /* nop */ return false; }
-    virtual bool isListening() const { return false; }
-    
+//    virtual size_t readData() { /* nop */ return 0; }
+//    virtual bool wantWrite() const { /* nop */ return false; }
+
     virtual void onDisconnect() = 0;
-    virtual void onRead() = 0;
-    virtual void onCanWrite() { /* nop */ }
-    virtual void onError() = 0;
+    virtual void onCanRead() = 0;
+    virtual void onCanWrite() = 0;
+//    virtual void onError() = 0;
 };
 
 
@@ -80,10 +77,10 @@ public:
     struct Delegate
     {
         virtual void onDisconnect(const RWSocket&) = 0;
-        virtual void onRead(const RWSocket&, const Data&) = 0;
+        virtual void onCanRead(const RWSocket&) = 0;
         virtual void onCanWrite(const RWSocket&) = 0;
-        virtual void onError(const RWSocket&) = 0;
-        virtual ~Delegate() { };
+//        virtual void onError(const RWSocket&) = 0;
+        virtual ~Delegate() { }
     };
     
 private:
@@ -91,15 +88,15 @@ private:
     
     Delegate*           delegate_;
     
-    std::string         host_, 
-    service_;
+//    std::string         host_, 
+//    service_;
     struct addrinfo     *addr_;
     
-    Data                readData_;
-    bool                wantWrite_;
+//    Data                readData_;
+//    bool                wantWrite_;
     
-    virtual bool wantWrite() const { return wantWrite_; }
-    virtual size_t readData();
+//    virtual bool wantWrite() const { return wantWrite_; }
+//    virtual size_t readData();
     
     // SocketWorker delegate methods
     virtual void onDisconnect()
@@ -107,28 +104,23 @@ private:
         delegate_->onDisconnect(*this);  
     }
     
-    virtual void onRead()
+    virtual void onCanRead()
     {
-        delegate_->onRead(*this, readData_);
+        delegate_->onCanRead(*this);
     }
     
     virtual void onCanWrite()
     {
         delegate_->onCanWrite(*this);
     }
-    
-    virtual void onError()
-    {
-        delegate_->onError(*this);
-    }
-    
 public:
     RWSocket(Delegate* del, const std::string& host, const std::string& service);    
     RWSocket(Delegate* del, Socket& sock);    
     
     virtual ~RWSocket();
     
-    const Data write(const Data& bytes);    
+    int write(Data & data);
+	int read(Data & data);
 };
 
 
@@ -144,8 +136,7 @@ public:
     {
         virtual void onDisconnect(const LASocket&) = 0;
         virtual void onNewClient(const LASocket&, Socket&) = 0;
-        virtual void onError(const LASocket&) = 0;
-        virtual ~Delegate() { };
+        virtual ~Delegate() { }
     };
     
 private:
@@ -162,18 +153,8 @@ private:
         delegate_->onDisconnect(*this);  
     }
     
-    virtual void onRead();
-    
-    virtual void onError()
-    {
-        delegate_->onError(*this);
-    }
-    
-    virtual bool isListening() const 
-    {
-        return true; 
-    }
-    
+    virtual void onCanRead();
+	virtual void onCanWrite() {}
 public:
     LASocket(Delegate* del, const std::string& service);
     LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service);    

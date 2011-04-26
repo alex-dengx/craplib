@@ -24,7 +24,7 @@
 class RWSocket;
 class LASocket;
 
-#define MAX_CONNECTIONS 65000
+//#define MAX_CONNECTIONS 65000
 
 /**
  * Shared socket select thread
@@ -37,23 +37,21 @@ private:
     typedef std::deque<SocketImpl*>  Vec;
     CondVar             c_;
 
-    Vec                 clients_;
+//    Vec                 clients_;
     Vec                 read_, write_, err_;
-    
+
     ThreadWithMessage   t_;
     
-    enum message_enum { IDLE, ONCHANGES };
-    message_enum        message_;    
-    
+//    enum message_enum { IDLE, ONCHANGES };
+//    message_enum        message_;    
+
     int                 kq_;
-    
-    void handleChanges();
-    
+
 public:
     SocketWorker()
     : c_(false)
     , t_(*this, *this)
-    , message_(IDLE)
+//    , message_(IDLE)
     , kq_( kqueue() )        
     { 
         t_.start();
@@ -69,22 +67,21 @@ public:
     void registerSocket(SocketImpl* impl)
     {
         CondLock lock(c_);
-        if(clients_.size() >= MAX_CONNECTIONS-1) {
-            wLog("can't handle this client - kqueue buffer is full.");
-            return;
-        }
+//        if(clients_.size() >= MAX_CONNECTIONS-1) {
+//            wLog("can't handle this client - kqueue buffer is full.");
+//            return;
+//        }
         
-        clients_.push_back(impl);
+//        clients_.push_back(impl);
         
         // Set the event filter
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_ADD, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_ADD, 0, 0, impl);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);                
-        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_ADD, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_ADD, 0, 0, impl);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
-        
-        wLog("socket attached. new clients size = %d; SOCKFD=%d", 
-             clients_.size(), impl->sock_);
+
+        wLog("socket attached. new clients size = hren; SOCKFD=%d", impl->s.get_sock());
         
         lock.set(true); // New client available
     }
@@ -96,30 +93,19 @@ public:
         err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
 
         CondLock lock(c_);
-        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
+//        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
                 
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->sock_, EVFILT_READ, EV_DELETE, 0, 0, 0);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_DELETE, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
-        EV_SET(&changeLst, impl->sock_, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_DELETE, 0, 0, 0);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
         
         lock.set(true);
     }
         
     // Processed on main thread
-    virtual void onCall(const ActiveMsg& msg) {
-
-        switch(message_) {
-            case ONCHANGES:
-                handleChanges();
-                break;
-                
-            default:
-                break;
-        }
-    }
-
+    virtual void onCall(const ActiveMsg& msg);
     virtual void run();
 };
 
