@@ -30,119 +30,29 @@ public:
         cmds_.pop();
                 
         // Write some data
-        data_ = sock_.write(data_);
+        sock_.write(data_);
     }
     
     // Delegate methods
     virtual void onDisconnect(const RWSocket& sock) 
     {
-        if(&sock == &sock_) {
-            wLog("[%x] test req socket disconnected", &sock);
-        }
+        wLog("[%x] test req socket disconnected", &sock);
     }
         
-    virtual void onRead(const RWSocket& sock, const Data& d)
+    virtual void onCanRead(const RWSocket& sock)
     {
-        if(&sock == &sock_) {   
-            wLog("got %d bytes", d.get_size());
+        int bytes = 0;
+        while(0 != (bytes = sock_.read(data_))) {
+            wLog("Got %d bytes from socket..", bytes);        
+            wLog("DATA: %s", std::string(data_.get_data(), data_.get_data()+bytes).c_str());
         }
     }
     
     virtual void onCanWrite(const RWSocket& sock)
     {
         if(&sock == &sock_ && !data_.empty()) {
-            data_ = sock_.write(data_);
+            sock_.write(data_);
         }
-    }
-    
-    virtual void onError(const RWSocket& sock) 
-    {
-        wLog("[%x] error on sock", &sock);
-    }
-    
-};
-
-
-class TestClient 
-: public RWSocket::Delegate
-{
-private:
-    Data data_;
-    RWSocket sock_;
-    
-public:
-    TestClient(Socket& sock)
-    : sock_(this, sock)
-    { }
-    
-    // Delegate methods
-    virtual void onDisconnect(const RWSocket& sock) 
-    {
-        if(&sock == &sock_) {
-            wLog("[%x] client socket disconnected", &sock);
-        }
-    }
-    
-    virtual void onRead(const RWSocket& sock, const Data& d)
-    {
-        if(&sock == &sock_) {
-            wLog("[%x] Got data len %d", &sock, d.get_size());
-
-            // Echo
-            data_ = sock_.write(d);
-        }
-    }
-    
-    virtual void onCanWrite(const RWSocket& sock)
-    {
-        if(&sock == &sock_ && !data_.empty()) {
-            data_ = sock_.write(data_);
-        }
-    }
-    
-    virtual void onError(const RWSocket& sock) 
-    {
-        wLog("[%x] error on sock", &sock);
-    }
-    
-};
-
-
-typedef SharedPtr<TestReq> TestReqPtr;
-std::vector<TestReqPtr> testReqVec;
-
-
-class TestServer
-: public LASocket::Delegate
-{
-private:
-    typedef SharedPtr<TestClient> CliPtr;
-    
-    LASocket sock_;
-    std::vector<CliPtr> clients_;
-    
-public:
-    TestServer()
-    : sock_(this, "9090")
-    { 
-        for(int i=0; i<5; ++i) 
-            testReqVec.push_back( TestReqPtr( new TestReq() ) );
-    }
-    
-    // Delegate methods    
-    virtual void onDisconnect(const LASocket& sock) 
-    {
-        wLog("[SERVER] exit");
-    }
-    
-    virtual void onNewClient(const LASocket& sock, Socket& cli) 
-    {        
-        clients_.push_back( CliPtr( new TestClient(cli) ) );
-    }
-    
-    virtual void onError(const LASocket& sock) 
-    {
-        wLog("[SERVER] error on sock");
     }
     
 };

@@ -76,9 +76,9 @@ public:
         
         // Set the event filter
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_ADD, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, impl);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);                
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_ADD, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, impl);
         kevent(kq_, &changeLst, 1, 0, 0, NULL);        
 
         wLog("socket attached. new clients size = hren; SOCKFD=%d", impl->s.get_sock());

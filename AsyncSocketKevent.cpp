@@ -33,12 +33,6 @@ void SocketWorker::run()
 
         for(int i=0; i<n; ++i) {
 
-//            if (kqEvents_[i].flags & EV_EOF)  {
-//                wLog("EOF on sock");
-//                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
-//                continue;
-//            }
-
             if(kqEvents_[i].flags & EV_ERROR) { 
                 err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                 continue;
@@ -54,7 +48,12 @@ void SocketWorker::run()
                     write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
-            }                                        
+            }      
+            
+            if (kqEvents_[i].flags & EV_EOF)  {
+                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                continue;
+            }
         }   
         
         c.call();
@@ -69,43 +68,18 @@ void SocketWorker::onCall(const ActiveMsg& msg)
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
-//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-//            continue;
 		cur->onCanRead();
-        
-/*        if( cur->isListening() ) {
-            
-        } else {
-            
-            // Try to actually read
-            int bytes = (int)cur->readData();
-            if(bytes > 0) {
-                cur->onRead();
-            } else if(bytes == 0) {
-                cur->onDisconnect();                
-                deregisterSocket(cur);
-            }
-            else {
-                cur->onError();                
-                deregisterSocket(cur);
-            }
-        }        */
     }
     
     while( !write_.empty() ) {
         SocketImpl* cur = write_.front();
         write_.pop_front();
-//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-//            continue;
 		cur->onCanWrite();
     }
     
     while( !err_.empty() ) {
         SocketImpl* cur = err_.front();
         err_.pop_front();        
-//        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-//            continue;
-
         deregisterSocket(cur);
 		cur->onDisconnect();
     }    

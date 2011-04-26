@@ -4,7 +4,7 @@
 #include "Tests.h"
 #include "AsyncSocket.h"
 #include "AsyncAddrInfo.h"
-#include "HTTPRequest.h"
+// #include "HTTPRequest.h"
 
 
 class TestReqAddr : public AsyncAddrInfo::Delegate {
@@ -24,9 +24,10 @@ public:
 
 int main (int argc, const char * argv[])
 {		
-	RunLoop rl;
-	TestReqAddr req;
-
-	rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
+    RUN_ALL();
+//	RunLoop rl;
+//	// TestReqAddr req;
+//
+//	rl.run(); // Locks because 'f' is not deleted (doesn't deregister msgs)
 }
 
