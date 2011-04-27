@@ -244,7 +244,6 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
 LASocket::~LASocket()
 {
     statics().deregisterSocket(this);
-    freeaddrinfo(addr_);
 }
 
 

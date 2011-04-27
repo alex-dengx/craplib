@@ -145,7 +145,6 @@ private:
     
     NetworkInterface    if_;
     std::string         service_;
-    struct addrinfo     *addr_;
     
     // SocketWorker delegate methods
     virtual void onDisconnect()

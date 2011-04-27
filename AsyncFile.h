@@ -16,34 +16,18 @@ class AsyncFileReader
 {
 public:
     struct Delegate {
-        virtual void onChunk(const AsyncFileReader&, const Data&) = 0;
+        virtual void onChunk(const AsyncFileReader&, Data&) = 0;
         virtual void onError(const AsyncFileReader&) = 0;
         virtual void onEndOfFile(const AsyncFileReader&) = 0;
         virtual ~Delegate() {};
     };
     
 private:    
-//    enum message_enum { START, CHUNK, COMPLETE };
-//    message_enum        message;    
-    
     Delegate            *delegate_;
     FILE                *fp_;
     Data                buffer_;
     Timer               timer_;
     int                 bsz_;
-    
-//    virtual void onCall(const ActiveMsg& msg) {
-//        switch(message) {
-//            case START:
-//                break;
-//                
-//            case CHUNK:
-//                break;
-//                
-//            case COMPLETE:
-//                break;
-//        }
-//    }
     
     virtual void onTimer(const Timer& timer) {
         if( bsz_ == 0) {
@@ -62,22 +46,41 @@ public:
     : delegate_(del)
     , timer_(*this)
     {        
-        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
-            throw std::exception();
-        }
+        this->open(filename);
     }
 
+    AsyncFileReader(Delegate* del)
+    : delegate_(del)
+    , fp_(NULL)
+    , timer_(*this)
+    {        
+    }
+    
     ~AsyncFileReader()
     {
         if(fp_)
             fclose(fp_);
     }
     
+    void open(const std::string& filename) 
+    {
+        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
+            throw std::exception();
+        }   
+    }
+    
     void read(int size) {        
+        if(!fp_) 
+            return;
+        
         buffer_ = Data(size);
 
         bsz_ = (int)fread(buffer_.lock(), 1, size, fp_);        
         timer_.set(0);
+    }
+    
+    operator bool() {
+        return fp_!=NULL;
     }
 };
 
