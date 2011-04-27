@@ -35,6 +35,14 @@ namespace crap {
         void swap(Data & other);
         ~Data();
         
+        const unsigned char get_byte()
+        {
+            if(empty())
+                return 0;
+            --size;
+            return *(impl->data + position++);
+        }
+        
         const unsigned char * get_data()const
         {
             return impl->data + position;
