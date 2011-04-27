@@ -67,6 +67,11 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     int set = 1;
 #ifndef __linux__
     setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    
+    linger set_linger;
+    set_linger.l_onoff = 0;
+    setsockopt(s.get_sock(), SOL_SOCKET, SO_LINGER, (char *)&set_linger,
+               sizeof(set_linger));            
 #endif
     setsockopt(s.get_sock(), SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
     errcode = connect(s.get_sock(), addr_->ai_addr, addr_->ai_addrlen);
@@ -257,6 +262,18 @@ void LASocket::onCanRead()
 #endif
     if(cli != -1) {
         Socket sock(cli);
+        
+#ifndef __linux__
+        int set = 1;
+        setsockopt(cli, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+#endif
+        
+        linger set_linger;
+        set_linger.l_onoff = 0;
+//        set_linger.l_linger = 1;
+        setsockopt(cli, SOL_SOCKET, SO_LINGER, (char *)&set_linger,
+                   sizeof(set_linger));        
+        
         delegate_->onNewClient(*this, sock);        
     } else {
         perror("accept()");
