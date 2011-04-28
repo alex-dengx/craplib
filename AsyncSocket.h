@@ -56,13 +56,9 @@ public:
     virtual ~SocketImpl() {}
     
 private:
-//    virtual size_t readData() { /* nop */ return 0; }
-//    virtual bool wantWrite() const { /* nop */ return false; }
-
     virtual void onDisconnect() = 0;
     virtual void onCanRead() = 0;
     virtual void onCanWrite() = 0;
-//    virtual void onError() = 0;
 };
 
 
@@ -79,7 +75,6 @@ public:
         virtual void onDisconnect(const RWSocket&) = 0;
         virtual void onCanRead(const RWSocket&) = 0;
         virtual void onCanWrite(const RWSocket&) = 0;
-//        virtual void onError(const RWSocket&) = 0;
         virtual ~Delegate() { }
     };
     
@@ -87,16 +82,7 @@ private:
     friend class SocketWorker;
     
     Delegate*           delegate_;
-    
-//    std::string         host_, 
-//    service_;
     struct addrinfo     *addr_;
-    
-//    Data                readData_;
-//    bool                wantWrite_;
-    
-//    virtual bool wantWrite() const { return wantWrite_; }
-//    virtual size_t readData();
     
     // SocketWorker delegate methods
     virtual void onDisconnect()

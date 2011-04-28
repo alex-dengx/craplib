@@ -11,7 +11,6 @@
 #include "LogUtil.h"
 
 class AsyncFileReader
-// : public ActiveMsgDelegate
 : public TimerDelegate
 {
 public:
@@ -22,38 +21,20 @@ public:
         virtual ~Delegate() {};
     };
     
-private:    
-    Delegate            *delegate_;
-    FILE                *fp_;
-    Data                buffer_;
-    Timer               timer_;
-    int                 bsz_;
-    
-    virtual void onTimer(const Timer& timer) {
-        if( bsz_ == 0) {
-            if(feof(fp_)) {
-                delegate_->onEndOfFile(*this);
-            } else {
-                delegate_->onError(*this);
-            }
-        } else {
-            buffer_ = Data(buffer_, 0, bsz_);
-            delegate_->onChunk(*this, buffer_);
-        }
-    }
-public:
     AsyncFileReader(Delegate* del, const std::string& filename)
-    : delegate_(del)
-    , timer_(*this)
-    {        
-        this->open(filename);
-    }
-
-    AsyncFileReader(Delegate* del)
     : delegate_(del)
     , fp_(NULL)
     , timer_(*this)
+    , fileSize_(0)
     {        
+        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
+            throw std::exception();
+        }   
+        
+        // Get file size
+        fseek(fp_, 0 , SEEK_END);
+        fileSize_ = ftell(fp_);
+        fseek(fp_, 0, SEEK_SET);
     }
     
     ~AsyncFileReader()
@@ -62,25 +43,42 @@ public:
             fclose(fp_);
     }
     
-    void open(const std::string& filename) 
-    {
-        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
-            throw std::exception();
-        }   
-    }
-    
     void read(int size) {        
         if(!fp_) 
+            return;
+        if(!buffer_.empty())
             return;
         
         buffer_ = Data(size);
 
-        bsz_ = (int)fread(buffer_.lock(), 1, size, fp_);        
+        int bsz = (int)fread(buffer_.lock(), 1, size, fp_);        
+        buffer_ = Data(buffer_, 0, bsz);
+        
         timer_.set(0);
     }
     
-    operator bool() {
-        return fp_!=NULL;
+    long filesize() const {
+        return fileSize_;
+    }
+    
+private:    
+    Delegate            *delegate_;
+    FILE                *fp_;
+    Data                buffer_;
+    Timer               timer_;
+    long                fileSize_;
+    
+    virtual void onTimer(const Timer& timer) {
+        if( buffer_.empty() ) {
+            if(feof(fp_)) {
+                delegate_->onEndOfFile(*this);
+            } else {
+                delegate_->onError(*this);
+            }
+        } else {
+            delegate_->onChunk(*this, buffer_);
+            buffer_ = Data();
+        }
     }
 };
 

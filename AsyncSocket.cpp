@@ -119,7 +119,7 @@ int RWSocket::write(Data & data)
 int RWSocket::read(Data & data) 
 {
     // Read data
-    Data d(4096);
+    Data d(65536);
 #ifdef __linux__
     int r = (int)recv(s.get_sock(), d.lock(), d.get_size(), MSG_NOSIGNAL);
 #else
@@ -145,9 +145,10 @@ LASocket::LASocket(Delegate* del, const std::string& service)
     serverAddress.sin_port = htons(atoi(service.c_str()));
     serverAddress.sin_addr.s_addr = INADDR_ANY; // Bind on all interfaces
     
+#ifndef __linux__
     int set = 1;
     setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    
+#endif
     if( bind(s.get_sock(), (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
         wLog("bind failed.");
@@ -267,6 +268,18 @@ void LASocket::onCanRead()
         int set = 1;
         setsockopt(cli, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 #endif
+      
+        // Make non-blocking         
+        int opts = fcntl(cli, F_GETFL);
+        if (opts < 0) {
+            perror("fcntl(F_GETFL)");
+            return;
+        }
+        opts = (opts | O_NONBLOCK);
+        if (fcntl(cli, F_SETFL, opts) < 0) {
+            perror("fcntl(F_SETFL)");
+            return;
+        }  
         
         linger set_linger;
         set_linger.l_onoff = 0;
