@@ -112,7 +112,7 @@ int RWSocket::write(Data & data)
 #endif
 	if(written < 0) // Nothing is written - most likely socket is dead
 		return 0;
-	data = Data(data, written, data.get_size());
+	data = Data(data, written, data.get_size() - written);
 	return written;
 }
 
@@ -126,7 +126,10 @@ int RWSocket::read(Data & data)
     int r = (int)::read(s.get_sock(), d.lock(), d.get_size());
 #endif
 	if(r < 0) // Nothing is read - most likely socket is dead
+	{
+		data = Data();
 		return 0;
+	}
     data = Data(d, 0, r);
     return r;
 }
