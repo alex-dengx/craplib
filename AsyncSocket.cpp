@@ -17,7 +17,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/select.h>
-#include <sys/event.h>
 #include <netdb.h>
 #include <fcntl.h>
 
@@ -208,13 +207,15 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
         serverAddress6.sin6_scope_id = nif.addr6.sin6_scope_id;
         serverAddress6.sin6_addr.__u6_addr = nif.addr6.sin6_addr.__u6_addr;
 #else
-#error ipv6 not yet fully supported for linux
+#warning ipv6 not yet fully supported for linux
 #endif
         sockAddr = (struct sockaddr*)&serverAddress6;        
     }
     
     int set = 1;
+#ifndef __linux__
     setsockopt(s.getSock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+#endif
     
     if( bind(s.getSock(), (const struct sockaddr *)sockAddr, 
              nif.family == NetworkInterface::IPv4 ? 

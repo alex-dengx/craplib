@@ -20,11 +20,6 @@ void SocketWorker::run()
     
     while( true ) {
         
-        {
-            // Wait till we have some clients
-            CondLock lock(c, true);
-        }
-        
         struct epoll_event eqEvents[1024];
         int n = epoll_wait(eq, eqEvents, 1024, -1);
         
