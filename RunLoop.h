@@ -27,40 +27,40 @@ namespace crap {
         typedef std::deque<ActiveMsg*>      MsgContainer;    
         typedef std::deque<Timer*>          TimerContainer;
         
-        bool            running_;
-        MsgContainer    queue_;
-        ActiveMsg       * processedMsg_;
-        CondVar         c_;
+        bool            running;
+        MsgContainer    queue;
+        ActiveMsg       * processedMsg;
+        CondVar         c;
         
-        TimerContainer   timers_;        
-        Threads::counter msgCnt_;
+        TimerContainer   timers;        
+        Threads::counter msgCnt;
         
         static ThreadLocalStorage<RunLoop> CurrentLoop;
         
-        void queue( ActiveMsg* msg ); // Called from 2nd thread
+        void enqueue( ActiveMsg* msg ); // Called from 2nd thread
         void dequeue( ActiveMsg* msg );
         
-        void queue( Timer* timer );
+        void enqueue( Timer* timer );
         void dequeue( Timer* timer );
         
         // Maintain counters
         void registerMsg( ActiveMsg* msg )
         {
-            Threads::interlocked_increment(&msgCnt_);
+            Threads::interlocked_increment(&msgCnt);
         }
         
         void deregisterMsg( ActiveMsg* msg )
         {
-            Threads::interlocked_decrement(&msgCnt_);
+            Threads::interlocked_decrement(&msgCnt);
         }
         
     public:
         
         RunLoop()
-        : c_(false)
-        , running_(false)
-        , processedMsg_(0)
-        , msgCnt_(0)
+        : c(false)
+        , running(false)
+        , processedMsg(0)
+        , msgCnt(0)
         { 
             if(!RunLoop::CurrentLoop) {
                 RunLoop::CurrentLoop = this;
@@ -78,7 +78,7 @@ namespace crap {
         
         void stop()
         {
-            running_ = false;
+            running = false;
         }
     };
     

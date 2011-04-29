@@ -132,10 +132,10 @@
 				24D43C65136095C300F992AD /* AsyncSocketEpoll.cpp */,
 				24D43C5F1360916100F992AD /* AsyncSocketKevent.h */,
 				24D43C601360916100F992AD /* AsyncSocketKevent.cpp */,
-				24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */,
 				24D43C5D13608FDB00F992AD /* AsyncSocketSelect.h */,
-				24D43C621360921F00F992AD /* AsyncSocket.cpp */,
+				24D43C5C13608FDB00F992AD /* AsyncSocketSelect.cpp */,
 				24C5D3F3133A243E0017276F /* AsyncSocket.h */,
+				24D43C621360921F00F992AD /* AsyncSocket.cpp */,
 				24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */,
 				24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */,
 				240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */,
@@ -232,8 +232,8 @@
 		24410A761332517C0004C635 /* Runloop */ = {
 			isa = PBXGroup;
 			children = (
-				24410A6A133250F50004C635 /* RunLoop.cpp */,
 				24410A6D133250F50004C635 /* RunLoop.h */,
+				24410A6A133250F50004C635 /* RunLoop.cpp */,
 				24410A6C133250F50004C635 /* ActiveMsg.h */,
 				24CBC13A13328AAF000872C5 /* Timer.h */,
 				24CBC13C133295F8000872C5 /* Timer.cpp */,

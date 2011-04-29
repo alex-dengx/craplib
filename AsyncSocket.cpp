@@ -22,33 +22,32 @@
 #include <fcntl.h>
 
 Socket::Socket()
-: sock_(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
+: sock(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 { }
 
-Socket::Socket(int sock)
-: sock_(sock)
+Socket::Socket(int s)
+: sock(s)
 { }
 
 Socket::~Socket()
 {
-    if(sock_!=0) {
-        close(sock_);
+    if(sock != 0) {
+        close(sock);
     }
 }
 
 
 RWSocket::RWSocket(Delegate* del, Socket& sock) 
 : SocketImpl(sock)
-, delegate_(del)
-, addr_(0)
+, delegate(del)
 {
     statics().registerSocket(this);
 }
 
 RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& service)
-: delegate_(del)
-, addr_(0)
+: delegate(del)
 {
+    struct addrinfo *addr;
     struct addrinfo hints = {};
     
     hints.ai_family = AF_INET;
@@ -57,7 +56,7 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
     hints.ai_flags |= AI_V4MAPPED;
     
     // TODO: what if we use IP instead of hostname?
-    int errcode = getaddrinfo (host.c_str(), service.c_str(), &hints, &addr_);
+    int errcode = getaddrinfo (host.c_str(), service.c_str(), &hints, &addr);
     if (errcode != 0)
     {
         wLog("getaddrinfo failed");
@@ -68,13 +67,11 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
 #ifndef __linux__
     setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
-//    linger set_linger;
-//    set_linger.l_onoff = 0;
-//    setsockopt(s.get_sock(), SOL_SOCKET, SO_LINGER, (char *)&set_linger,
-//               sizeof(set_linger));            
 #endif
     setsockopt(s.get_sock(), SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
-    errcode = connect(s.get_sock(), addr_->ai_addr, addr_->ai_addrlen);
+    errcode = connect(s.get_sock(), addr->ai_addr, addr->ai_addrlen);
+    freeaddrinfo(addr);
+
     if ( errcode < 0)
     {
         wLog("connect failed, will get error on write");
@@ -99,20 +96,18 @@ RWSocket::RWSocket(Delegate* del, const std::string& host, const std::string& se
 RWSocket::~RWSocket()
 {
     statics().deregisterSocket(this);
-    if(addr_!=NULL)
-        freeaddrinfo(addr_);
 }
 
 int RWSocket::write(Data & data)
 {
 #ifdef __linux__
-    int written = (int)send(s.get_sock(), data.get_data(), data.get_size(), MSG_NOSIGNAL);
+    int written = (int)send(s.get_sock(), data.getData(), data.getSize(), MSG_NOSIGNAL);
 #else
-    int written = (int)send(s.get_sock(), data.get_data(), data.get_size(), 0);
+    int written = (int)send(s.get_sock(), data.getData(), data.getSize(), 0);
 #endif
 	if(written < 0) // Nothing is written - most likely socket is dead
 		return 0;
-	data = Data(data, written, data.get_size() - written);
+	data = Data(data, written, data.getSize() - written);
 	return written;
 }
 
@@ -121,9 +116,9 @@ int RWSocket::read(Data & data)
     // Read data
     Data d(65536);
 #ifdef __linux__
-    int r = (int)recv(s.get_sock(), d.lock(), d.get_size(), MSG_NOSIGNAL);
+    int r = (int)recv(s.get_sock(), d.lock(), d.getSize(), MSG_NOSIGNAL);
 #else
-    int r = (int)::read(s.get_sock(), d.lock(), d.get_size());
+    int r = (int)::read(s.get_sock(), d.lock(), d.getSize());
 #endif
 	if(r < 0) // Nothing is read - most likely socket is dead
 	{
@@ -135,11 +130,12 @@ int RWSocket::read(Data & data)
 }
 
 LASocket::LASocket(Delegate* del, const std::string& service)
-: delegate_(del)
-, service_(service)
+: delegate(del)
+, service(service)
 {
-    if(delegate_ == NULL)
+    if(delegate == NULL)
         throw std::exception();
+    
     struct sockaddr_in serverAddress = {};    
     serverAddress.sin_family = AF_INET;
 #ifndef __linux__
@@ -182,24 +178,24 @@ LASocket::LASocket(Delegate* del, const std::string& service)
 
 
 LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string& service)
-: delegate_(del)
-, if_(nif)
-, service_(service)
+: delegate(del)
+, iface(nif)
+, service(service)
 {
-    if(delegate_ == NULL)
+    if(delegate == NULL)
         throw std::exception();
     
     struct sockaddr* sockAddr = NULL;
     struct sockaddr_in serverAddress = {};
     struct sockaddr_in6 serverAddress6 = {};
     
-    if(nif.family() == NetworkInterface::IPv4) {
+    if(nif.family == NetworkInterface::IPv4) {
         serverAddress.sin_family = AF_INET;
 #ifndef __linux__
         serverAddress.sin_len    = sizeof(serverAddress);
 #endif
         serverAddress.sin_port = htons(atoi(service.c_str()));
-        serverAddress.sin_addr.s_addr = nif.addr()->sin_addr.s_addr;
+        serverAddress.sin_addr.s_addr = nif.addr.sin_addr.s_addr;
         
         sockAddr = (struct sockaddr*)&serverAddress;        
         
@@ -208,9 +204,9 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
 #ifndef __linux__
         serverAddress6.sin6_len    = sizeof(serverAddress6);
         serverAddress6.sin6_port = htons(atoi(service.c_str()));
-        serverAddress6.sin6_flowinfo = nif.addr6()->sin6_flowinfo;
-        serverAddress6.sin6_scope_id = nif.addr6()->sin6_scope_id;
-        serverAddress6.sin6_addr.__u6_addr = nif.addr6()->sin6_addr.__u6_addr;
+        serverAddress6.sin6_flowinfo = nif.addr6.sin6_flowinfo;
+        serverAddress6.sin6_scope_id = nif.addr6.sin6_scope_id;
+        serverAddress6.sin6_addr.__u6_addr = nif.addr6.sin6_addr.__u6_addr;
 #else
 #error ipv6 not yet fully supported for linux
 #endif
@@ -221,7 +217,7 @@ LASocket::LASocket(Delegate* del, const NetworkInterface& nif, const std::string
     setsockopt(s.get_sock(), SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
     
     if( bind(s.get_sock(), (const struct sockaddr *)sockAddr, 
-             nif.family()==NetworkInterface::IPv4 ? 
+             nif.family == NetworkInterface::IPv4 ? 
              sizeof(serverAddress) : sizeof(serverAddress6)) < 0)
     {
         wLog("bind failed.");
@@ -291,7 +287,7 @@ void LASocket::onCanRead()
 //        setsockopt(cli, SOL_SOCKET, SO_LINGER, (char *)&set_linger,
 //                   sizeof(set_linger));        
         
-        delegate_->onNewClient(*this, sock);        
+        delegate->onNewClient(*this, sock);        
     } else {
         perror("accept()");
     }

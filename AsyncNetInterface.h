@@ -37,78 +37,53 @@ public:
     { }
     
     NetworkInterface(const NetworkInterface& other)
-    : ip_(other.ip_)
-    , if_(other.if_)
-    , family_(other.family_)
+    : ip(other.ip)
+    , name(other.name)
+    , family(other.family)
     {
-        if(family_==IPv4)
-            std::swap(addr_, *(struct sockaddr_in*)(&other.addr_));        
-        else if(family_==IPv6)
-            std::swap(addr6_, *(struct sockaddr_in6*)(&other.addr6_));                    
+        if(family == IPv4)
+            std::swap(addr, *(struct sockaddr_in*)(&other.addr));        
+        else if(family == IPv6)
+            std::swap(addr6, *(struct sockaddr_in6*)(&other.addr6));                    
     }
        
     ~NetworkInterface()
     {
     }
     
-    inline std::string ip() const
-    {
-        return ip_;
-    }
-    
-    inline std::string name() const
-    {
-        return if_;
-    }        
-    
-    inline Family family() const 
-    {
-        return family_;
-    }
-    
-    inline const struct sockaddr_in* const addr() const 
-    {
-        return &addr_;
-    }
-    
-    inline const struct sockaddr_in6* const addr6() const 
-    {
-        return &addr6_;
-    }
+    std::string     ip;
+    std::string     name;
+    union {
+        struct sockaddr_in  addr;
+        struct sockaddr_in6 addr6;
+    };
+    Family          family;
     
 private:
     friend class NetworkInterfaces;
-    
-    std::string     ip_;
-    std::string     if_;
-    union {
-        struct sockaddr_in  addr_;
-        struct sockaddr_in6 addr6_;
-    };
-    Family          family_;
-    
+        
     NetworkInterface(ifaddrs* inaddr)
     {
-        if_ = std::string( inaddr->ifa_name );
+        name = std::string( inaddr->ifa_name );
         
         if(inaddr->ifa_addr->sa_family == AF_INET6) {
             char straddr[INET6_ADDRSTRLEN] = {};
             struct sockaddr_in6* addr = (struct sockaddr_in6*)inaddr->ifa_addr;
-            ip_ = std::string( inet_ntop(AF_INET6, &addr->sin6_addr,
+            ip = std::string( inet_ntop(AF_INET6, &addr->sin6_addr,
                                          straddr, sizeof(straddr)) );
-            family_ = IPv6;
-            std::swap(addr6_, *addr);
+            family = IPv6;
+            std::swap(addr6, *addr);
             
         } else if (inaddr->ifa_addr->sa_family == AF_INET) {
             
-            struct sockaddr_in* addr = (struct sockaddr_in*)inaddr->ifa_addr;
-            ip_ = std::string( inet_ntoa(addr->sin_addr) );        
-            family_ = IPv4;
-            std::swap(addr_, *addr);
+            struct sockaddr_in* naddr = (struct sockaddr_in*)inaddr->ifa_addr;
+            ip = std::string( inet_ntoa(naddr->sin_addr) );        
+            family = IPv4;
+            std::swap(addr, *naddr);
             
         } else {
             
-            family_ = UNKNOWN;
+            family = UNKNOWN;
             // Not interested
         }
     }
@@ -127,37 +102,37 @@ public:
     };
     
     NetworkInterfaces(Delegate* del, NetworkInterface::Family filter)
-    : delegate_(del)
-    , t_(*this, this)
-    , message_(IDLE)
-    , filter_(filter)
+    : delegate(del)
+    , t(*this, this)
+    , message(IDLE)
+    , filter(filter)
     {        
         if(del == NULL)
             throw std::exception();
         
-        t_.start();
+        t.start();
     }
     
     ~NetworkInterfaces()
     {
-        t_.requestTermination();
-        t_.waitTermination();
+        t.requestTermination();
+        t.waitTermination();
         
-        freeifaddrs(addrs_);
+        freeifaddrs(addrs);
     }
     
     virtual void run();    
     virtual void onCall(const ActiveMsg& msg);
     
 private:
-    Delegate*           delegate_;
-    ThreadWithMessage   t_;
+    Delegate*           delegate;
+    ThreadWithMessage   t;
     enum message_type { IDLE, INTERFACE_DETECTED };
-    message_type        message_;
+    message_type        message;
     
-    ifaddrs*                    addrs_;
-    NetworkInterface            curInterface_;
-    NetworkInterface::Family    filter_;
+    ifaddrs*                    addrs;
+    NetworkInterface            curInterface;
+    NetworkInterface::Family    filter;
 };
 
 #endif // __ASYNC_NET_INTERFACE_H__

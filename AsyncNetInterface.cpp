@@ -5,13 +5,13 @@
 
 void NetworkInterfaces::run() 
 {
-    getifaddrs(&addrs_); // Get the list
+    getifaddrs(&addrs); // Get the list
     
-    ifaddrs* p = &addrs_[0];
+    ifaddrs* p = &addrs[0];
     while(p != NULL) {
         
-        ActiveCall c(t_.msg_);
-        curInterface_ = NetworkInterface(p);
+        ActiveCall c(t.msg);
+        curInterface = NetworkInterface(p);
         c.call();
             
         p = p->ifa_next;
@@ -20,11 +20,11 @@ void NetworkInterfaces::run()
 
 void NetworkInterfaces::onCall(const ActiveMsg& msg) 
 {
-    if(filter_ == NetworkInterface::ANY || curInterface_.family() == filter_ ||
-       (filter_ == NetworkInterface::IP 
-        && (curInterface_.family() == NetworkInterface::IPv4 ||
-            curInterface_.family() == NetworkInterface::IPv6)
+    if(filter == NetworkInterface::ANY || curInterface.family == filter ||
+       (filter == NetworkInterface::IP 
+        && (curInterface.family == NetworkInterface::IPv4 ||
+            curInterface.family == NetworkInterface::IPv6)
         ) 
        )
-        delegate_->onInterfaceDetected(*this, curInterface_);
+        delegate->onInterfaceDetected(*this, curInterface);
 }

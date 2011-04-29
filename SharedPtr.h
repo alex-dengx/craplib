@@ -15,25 +15,25 @@ namespace crap {
         friend class WeakPtr<T>;
         
     private:    
-        WeakPtr<T>  ptr_;
+        WeakPtr<T>  ptr;
         
         void attach() 
         {
-            Threads::interlocked_increment(&ptr_.cnt_->sc_);
+            Threads::interlocked_increment(&ptr.cnt->sc);
         }
         
         void detach() 
         {
-            if( Threads::interlocked_decrement(&ptr_.cnt_->sc_) == 0 ) {
-                delete ptr_.pObj_;
-                ptr_.pObj_ = 0;
+            if( Threads::interlocked_decrement(&ptr.cnt->sc) == 0 ) {
+                delete ptr.pObj;
+                ptr.pObj = 0;
             }
         }
         
         SharedPtr(T* p, typename WeakPtr<T>::Counters * c)
         {
-            ptr_.pObj_ = p;
-            ptr_.cnt_ = c;
+            ptr.pObj = p;
+            ptr.cnt = c;
             attach();
         }
         
@@ -44,13 +44,13 @@ namespace crap {
         }
         
         explicit SharedPtr(T* p)
-        : ptr_(p)
+        : ptr(p)
         {
             attach();
         }
         
         SharedPtr(const SharedPtr<T>& r)
-        : ptr_(r.ptr_)
+        : ptr(r.ptr)
         { 
             attach();
         }
@@ -60,10 +60,10 @@ namespace crap {
             detach();
         }
         
-        bool isTheOne()const { return ptr_.cnt_->sc_; }
+        bool isTheOne()const { return ptr.cnt->sc; }
         void swap(SharedPtr<T>& other)
         {
-            ptr_.swap(other.ptr_);
+            ptr.swap(other.ptr);
         }
         
         SharedPtr<T>& operator= (const SharedPtr<T>& r) 
@@ -75,22 +75,22 @@ namespace crap {
         
         inline T * get() const
         { 
-            return ptr_.pObj_; 
+            return ptr.pObj; 
         }
         
         inline T * operator-> () const 
         { 
-            return ptr_.pObj_; 
+            return ptr.pObj; 
         }    
         
         inline operator bool() const 
         { 
-            return ptr_.pObj_ != 0; 
+            return ptr.pObj != 0; 
         }
 		
         inline bool operator < ( const SharedPtr<T>& other ) const
         {
-            return ptr_.pObj_ < other.ptr_.pObj_;
+            return ptr.pObj < other.ptr.pObj;
         }
     };
     

@@ -24,9 +24,9 @@ namespace crap {
             virtual ~Delegate() {};
         };
         
-        Timer(Delegate* delegate)
-        : fire_( 0 )
-        , delegate_(delegate)
+        Timer(Delegate* del)
+        : fire( 0 )
+        , delegate(del)
         { }
         
         ~Timer();
@@ -36,20 +36,20 @@ namespace crap {
         
         bool operator < ( const Timer& other ) const
         {
-            return fire_ < other.fire_;
+            return fire < other.fire;
         }
         
     private:
         friend class RunLoop;
         
-        double          fire_;
-        Delegate        * delegate_;
+        double          fire;
+        Delegate        * delegate;
         
         void process(); // Called by RunLoop    
         
         double firetime() const 
         {
-            return fire_;
+            return fire;
         }
     };
     

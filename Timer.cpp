@@ -24,11 +24,11 @@ void Timer::set(double time)   // Put this timer on the RunLoop
         throw std::exception();
     }
     
-    fire_ = Timing::currentTime() + time;
-    RunLoop::CurrentLoop->queue( this );
+    fire = Timing::currentTime() + time;
+    RunLoop::CurrentLoop->enqueue( this );
 }
 
 void Timer::process() 
 {
-    delegate_->onTimer(*this);
+    delegate->onTimer(*this);
 }

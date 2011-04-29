@@ -33,25 +33,25 @@ private:
     typedef std::set<SocketImpl*>    Clients;
     typedef std::deque<SocketImpl*>  Vec;
 
-    Clients             clients_;
-    Vec                 read_, write_, err_;
-    ThreadWithMessage   t_;
+    Clients             clients;
+    Vec                 read, write, err;
+    ThreadWithMessage   t;
     
-    int                 kq_;
+    int                 kq;
 
 public:
     SocketWorker()
-    : t_(*this, this)
-    , kq_( kqueue() )        
+    : t(*this, this)
+    , kq( kqueue() )        
     { 
-        t_.start();
+        t.start();
     }
     
     ~SocketWorker()
     {
-        t_.requestTermination();
-        t_.waitTermination();
-        close(kq_);
+        t.requestTermination();
+        t.waitTermination();
+        close(kq);
     }
     
     void registerSocket(SocketImpl* impl)
@@ -59,22 +59,22 @@ public:
         // Set the event filter
         struct kevent changeLst;
         EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, impl);
-        kevent(kq_, &changeLst, 1, 0, 0, NULL);                
+        kevent(kq, &changeLst, 1, 0, 0, NULL);                
         EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, impl);
-        kevent(kq_, &changeLst, 1, 0, 0, NULL);        
+        kevent(kq, &changeLst, 1, 0, 0, NULL);        
         
-        clients_.insert(impl);
+        clients.insert(impl);
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
         struct kevent changeLst;
         EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_DELETE, 0, 0, 0);
-        kevent(kq_, &changeLst, 1, 0, 0, NULL);        
+        kevent(kq, &changeLst, 1, 0, 0, NULL);        
         EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-        kevent(kq_, &changeLst, 1, 0, 0, NULL);        
+        kevent(kq, &changeLst, 1, 0, 0, NULL);        
         
-        clients_.erase(impl);
+        clients.erase(impl);
     }
         
     // Processed on main thread

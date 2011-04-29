@@ -35,7 +35,7 @@ namespace crap {
         void swap(Data & other);
         ~Data();
         
-        const unsigned char get_byte()
+        const unsigned char getByte()
         {
             if(empty())
                 return 0;
@@ -43,14 +43,14 @@ namespace crap {
             return *(impl->data + position++);
         }
         
-        const unsigned char * get_data()const
+        const unsigned char * getData()const
         {
             return impl->data + position;
         }
         
         unsigned char * lock();
         
-        int get_size()const
+        int getSize()const
         {
             return size;
         }
@@ -80,7 +80,7 @@ namespace crap {
 		void write(const Data & data);
 		void read(Data & data, int max_size);
 		void read(Data & data);
-		int get_size()const { return size; }
+		int getSize()const { return size; }
 	private:
 		std::list<Data> m_data;
 		int size;

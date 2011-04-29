@@ -12,13 +12,13 @@ class SecureRWSocket
 : public RWSocket::Delegate
 {
 private:
-    RWSocket sock_;
-    SSLTube  ssl_;
+    RWSocket sock;
+    SSLTube  ssl;
     
 public:
     SecureRWSocket(Delegate* del, const std::string& host, const std::string& service, SSLContext& ctx) 
-    : sock_(this, host, service)
-    , ssl_()
+    : sock(this, host, service)
+    , ssl()
     { 
         // 1) get data from sock_
         // 2) tell ssl_ to perform handshake using that data
@@ -26,9 +26,8 @@ public:
     
     // RWSocket delegate methods
     virtual void onDisconnect(const RWSocket&);
-    virtual void onRead(const RWSocket&, const Data&);
+    virtual void onCanRead(const RWSocket&);
     virtual void onCanWrite(const RWSocket&);
-    virtual void onError(const RWSocket&);
 };
 
 #endif // __ASYNC_SECURE_SOCKET_H__

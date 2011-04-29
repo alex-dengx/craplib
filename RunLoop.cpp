@@ -11,84 +11,84 @@ ThreadLocalStorage<RunLoop> RunLoop::CurrentLoop;
 
 void RunLoop::run()
 {
-    running_ = true;
+    running = true;
     
-    while( running_ ) {
-        processedMsg_ = 0;
-        if( !timers_.empty() )
+    while( running ) {
+        processedMsg = 0;
+        if( !timers.empty() )
         {
-            double ft = timers_.front()->firetime();
-            CondLock lock(c_, true, ft + 0.001); // :)
+            double ft = timers.front()->firetime();
+            CondLock lock(c, true, ft + 0.001); // :)
 
-            if(!queue_.empty()) {
-                processedMsg_ = queue_.front();
-                queue_.pop_front();
+            if(!queue.empty()) {
+                processedMsg = queue.front();
+                queue.pop_front();
             }
-            lock.set(!queue_.empty());
+            lock.set(!queue.empty());
         }
         else
         {
-            CondLock lock(c_, true);
-            if(!queue_.empty()) {
-                processedMsg_ = queue_.front();
-                queue_.pop_front();
+            CondLock lock(c, true);
+            if(!queue.empty()) {
+                processedMsg = queue.front();
+                queue.pop_front();
             }
-            lock.set(!queue_.empty());
+            lock.set(!queue.empty());
         }
-        if( processedMsg_ )
-            processedMsg_->onCall();
-        if( processedMsg_ )
+        if( processedMsg )
+            processedMsg->onCall();
+        if( processedMsg )
         {
-            CondLock l(processedMsg_->c_);
+            CondLock l(processedMsg->c);
             l.set(false);
         }
-        while(!timers_.empty())
+        while(!timers.empty())
         {
             double ct = Timing::currentTime();
-            double ft = timers_.front()->firetime();
+            double ft = timers.front()->firetime();
             if( ct < ft )
                 break;
-            Timer * t = timers_.front();
-            timers_.pop_front();
+            Timer * t = timers.front();
+            timers.pop_front();
             t->process();
         }
         
         // Now when we have processed everything pending
         // check whether something new is scheduled.. if not - terminate
-        if(timers_.empty() && msgCnt_ == 0)
-            running_ = false;
+        if(timers.empty() && msgCnt == 0)
+            running = false;
     } 
     
     wLog("Runloop terminating..");
 }
 
-void RunLoop::queue( ActiveMsg *msg )
+void RunLoop::enqueue( ActiveMsg *msg )
 {         
-    CondLock lock(c_);
-    queue_.push_back(msg); 
-    lock.set(!queue_.empty());
+    CondLock lock(c);
+    queue.push_back(msg); 
+    lock.set(!queue.empty());
 }
 
 void RunLoop::dequeue( ActiveMsg *msg ) 
 {
-    if( msg == processedMsg_ )
-        processedMsg_ = 0;
+    if( msg == processedMsg )
+        processedMsg = 0;
     
-    queue_.erase( std::remove(queue_.begin(), 
-                              queue_.end(), 
-                              msg), queue_.end() );
+    queue.erase( std::remove(queue.begin(), 
+                              queue.end(), 
+                              msg), queue.end() );
 }
 
-void RunLoop::queue( Timer* timer ) 
+void RunLoop::enqueue( Timer* timer ) 
 {
-    timers_.insert( std::lower_bound(timers_.begin(),
-                                     timers_.end(), 
+    timers.insert( std::lower_bound(timers.begin(),
+                                     timers.end(), 
                                      timer, PtrCmp<Timer>()), timer);
 }
 
 void RunLoop::dequeue( Timer *timer ) 
 {
-    timers_.erase( std::remove(timers_.begin(), 
-                               timers_.end(), 
-                               timer ), timers_.end());
+    timers.erase( std::remove(timers.begin(), 
+                               timers.end(), 
+                               timer ), timers.end());
 }

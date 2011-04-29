@@ -15,41 +15,41 @@ class FileReader
 {
 public:
     FileReader(const std::string& filename)
-    : fp_(NULL)
-    , fileSize_(0)
+    : fp(NULL)
+    , fileSize(0)
     {        
-        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
+        if( !(fp = fopen(filename.c_str(), "rb")) ) {
             throw std::exception();
         }   
         
         // Get file size
-        fseek(fp_, 0 , SEEK_END);
-        fileSize_ = ftell(fp_);
-        fseek(fp_, 0, SEEK_SET);
+        fseek(fp, 0 , SEEK_END);
+        fileSize = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
     }
     
     ~FileReader()
     {
-        if(fp_)
-            fclose(fp_);
+        if(fp)
+            fclose(fp);
     }
     
     Data read(int size) {        
-        if(!fp_) 
+        if(!fp) 
             return Data(0);
         
         Data buffer(size);
-        int bsz = (int)fread(buffer.lock(), 1, size, fp_);        
+        int bsz = (int)fread(buffer.lock(), 1, size, fp);        
         return Data(buffer, 0, bsz);
     }
     
     long filesize() const {
-        return fileSize_;
+        return fileSize;
     }
     
 private:    
-    FILE                *fp_;
-    long                fileSize_;    
+    FILE                *fp;
+    long                fileSize;    
 };
 
 
@@ -66,62 +66,62 @@ public:
     };
     
     AsyncFileReader(Delegate* del, const std::string& filename)
-    : delegate_(del)
-    , fp_(NULL)
-    , timer_(this)
-    , fileSize_(0)
+    : delegate(del)
+    , fp(NULL)
+    , timer(this)
+    , fileSize(0)
     {        
-        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
+        if( !(fp = fopen(filename.c_str(), "rb")) ) {
             throw std::exception();
         }   
         
         // Get file size
-        fseek(fp_, 0 , SEEK_END);
-        fileSize_ = ftell(fp_);
-        fseek(fp_, 0, SEEK_SET);
+        fseek(fp, 0 , SEEK_END);
+        fileSize = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
     }
     
     ~AsyncFileReader()
     {
-        if(fp_)
-            fclose(fp_);
+        if(fp)
+            fclose(fp);
     }
     
     void read(int size) {        
-        if(!fp_) 
+        if(!fp) 
             return;
-        if(!buffer_.empty())
+        if(!buffer.empty())
             return;
         
-        buffer_ = Data(size);
+        buffer = Data(size);
 
-        int bsz = (int)fread(buffer_.lock(), 1, size, fp_);        
-        buffer_ = Data(buffer_, 0, bsz);
+        int bsz = (int)fread(buffer.lock(), 1, size, fp);        
+        buffer = Data(buffer, 0, bsz);
         
-        timer_.set(0);
+        timer.set(0);
     }
     
     long filesize() const {
-        return fileSize_;
+        return fileSize;
     }
     
 private:    
-    Delegate            *delegate_;
-    FILE                *fp_;
-    Data                buffer_;
-    Timer               timer_;
-    long                fileSize_;
+    Delegate            *delegate;
+    FILE                *fp;
+    Data                buffer;
+    Timer               timer;
+    long                fileSize;
     
     virtual void onTimer(const Timer& timer) {
-        if( buffer_.empty() ) {
-            if(feof(fp_)) {
-                delegate_->onEndOfFile(*this);
+        if( buffer.empty() ) {
+            if(feof(fp)) {
+                delegate->onEndOfFile(*this);
             } else {
-                delegate_->onError(*this);
+                delegate->onError(*this);
             }
         } else {
-            delegate_->onChunk(*this, buffer_);
-            buffer_ = Data();
+            delegate->onChunk(*this, buffer);
+            buffer = Data();
         }
     }
 };
