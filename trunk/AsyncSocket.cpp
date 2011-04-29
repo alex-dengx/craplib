@@ -254,14 +254,16 @@ LASocket::~LASocket()
 
 void LASocket::onCanRead()
 {
-    // Indicates there is a new client
+	while(true) // Hrissan: we should accept ALL clients, not only the first one
+	{
 #ifndef __linux__
-    int cli = accept(s.get_sock(), NULL, NULL);
+		int cli = accept(s.get_sock(), NULL, NULL);
 #else
-    int cli = accept4(s.get_sock(), NULL, NULL, O_NONBLOCK);
+		int cli = accept4(s.get_sock(), NULL, NULL, O_NONBLOCK);
 #endif
-    if(cli != -1) {
-        Socket sock(cli);
+		if(cli == -1)
+			break; // No more accepted sockets
+		Socket sock(cli);
         wLog("[0x%04X] LASocket::onCanRead created Socket [%d]", this, cli);
         
 #ifndef __linux__
@@ -288,7 +290,5 @@ void LASocket::onCanRead()
 //                   sizeof(set_linger));        
         
         delegate->onNewClient(*this, sock);        
-    } else {
-        perror("accept()");
-    }
+	}
 }
