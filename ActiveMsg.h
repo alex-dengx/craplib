@@ -11,33 +11,17 @@
 
 namespace crap {
     
-    class ActiveMsg;
-    class ActiveMsgDelegate
-    {
-        friend class ActiveMsg;
-        virtual void onCall(const ActiveMsg& msg) = 0;
-    };
-    
     class ActiveMsg 
     {
-    private:
-        friend class RunLoop;
-        friend class ActiveCall;
-        friend class ThreadWithMessage;
-        
-        CondVar                     c_;
-        ActiveMsgDelegate&          delegate_;
-        RunLoop                   * rl_;
-        bool                        destroyed_;
-        
-        inline void call() 
-        {
-            rl_->queue( this );
-        }
-        
     public:
         
-        explicit ActiveMsg(ActiveMsgDelegate& delegate) 
+        struct Delegate
+        {            
+            virtual void onCall(const ActiveMsg& msg) = 0;
+            virtual ~Delegate() {};
+        };
+        
+        explicit ActiveMsg(Delegate* delegate) 
         : c_(false)
         , delegate_(delegate)
         , destroyed_(false)
@@ -59,7 +43,22 @@ namespace crap {
         
         inline void onCall()
         {
-            delegate_.onCall(*this);
+            delegate_->onCall(*this);
+        }
+    
+    private:
+        friend class RunLoop;
+        friend class ActiveCall;
+        friend class ThreadWithMessage;
+        
+        CondVar                     c_;
+        Delegate                  * delegate_;
+        RunLoop                   * rl_;
+        bool                        destroyed_;
+        
+        inline void call() 
+        {
+            rl_->queue( this );
         }
     };
     
@@ -92,9 +91,9 @@ namespace crap {
     public:  
         ActiveMsg   msg_;
         
-        explicit ThreadWithMessage(Runnable& r, ActiveMsgDelegate& am_del)
+        explicit ThreadWithMessage(Runnable& r, ActiveMsg::Delegate* delegate)
         : thread_(r)
-        , msg_(am_del)
+        , msg_(delegate)
         { }
         
         void start()

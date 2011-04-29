@@ -33,9 +33,9 @@ public:
 AsyncAddrInfo::Impl AsyncAddrInfo::Impl::static_impl;
 
 
-class AsyncAddrInfo::Impl::Worker : public Runnable, public ActiveMsgDelegate {
+class AsyncAddrInfo::Impl::Worker : public Runnable, public ActiveMsg::Delegate {
 public:
-	explicit Worker():thm(*this, *this), addr(0), res(0), has_work_or_quit(false)
+	explicit Worker():thm(*this, this), addr(0), res(0), has_work_or_quit(false)
 	{
 		thm.start();
 	}

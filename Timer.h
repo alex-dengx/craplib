@@ -11,33 +11,20 @@ namespace crap {
     
     class RunLoop;
     
-    class Timer;
-    class TimerDelegate
-    {
-        friend class Timer;
-        virtual void onTimer(const Timer& timer) = 0;
-    };
-    
     /**
      * A generic timer
      */
     class Timer
     {
-    private:
-        friend class RunLoop;
-        
-        double          fire_;
-        TimerDelegate&  delegate_;
-        
-        void process(); // Called by RunLoop    
-        
-        double firetime() const 
-        {
-            return fire_;
-        }
     public:
         
-        Timer(TimerDelegate& delegate)
+        struct Delegate
+        {
+            virtual void onTimer(const Timer& timer) = 0;
+            virtual ~Delegate() {};
+        };
+        
+        Timer(Delegate* delegate)
         : fire_( 0 )
         , delegate_(delegate)
         { }
@@ -50,6 +37,19 @@ namespace crap {
         bool operator < ( const Timer& other ) const
         {
             return fire_ < other.fire_;
+        }
+        
+    private:
+        friend class RunLoop;
+        
+        double          fire_;
+        Delegate        * delegate_;
+        
+        void process(); // Called by RunLoop    
+        
+        double firetime() const 
+        {
+            return fire_;
         }
     };
     

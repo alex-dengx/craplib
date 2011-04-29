@@ -31,44 +31,7 @@ public:
         IPv4 = 4,
         IPv6 = 6
     };
-    
-private:
-    friend class NetworkInterfaces;
-
-    std::string     ip_;
-    std::string     if_;
-    union {
-        struct sockaddr_in  addr_;
-        struct sockaddr_in6 addr6_;
-    };
-    Family          family_;
-    
-    NetworkInterface(ifaddrs* inaddr)
-    {
-        if_ = std::string( inaddr->ifa_name );
-                
-        if(inaddr->ifa_addr->sa_family == AF_INET6) {
-            char straddr[INET6_ADDRSTRLEN] = {};
-            struct sockaddr_in6* addr = (struct sockaddr_in6*)inaddr->ifa_addr;
-            ip_ = std::string( inet_ntop(AF_INET6, &addr->sin6_addr,
-                                         straddr, sizeof(straddr)) );
-            family_ = IPv6;
-            std::swap(addr6_, *addr);
-            
-        } else if (inaddr->ifa_addr->sa_family == AF_INET) {
-            
-            struct sockaddr_in* addr = (struct sockaddr_in*)inaddr->ifa_addr;
-            ip_ = std::string( inet_ntoa(addr->sin_addr) );        
-            family_ = IPv4;
-            std::swap(addr_, *addr);
-            
-        } else {
-            
-            family_ = UNKNOWN;
-            // Not interested
-        }
-    }
-    
+        
 public:
     NetworkInterface()
     { }
@@ -112,12 +75,49 @@ public:
     {
         return &addr6_;
     }
+    
+private:
+    friend class NetworkInterfaces;
+    
+    std::string     ip_;
+    std::string     if_;
+    union {
+        struct sockaddr_in  addr_;
+        struct sockaddr_in6 addr6_;
+    };
+    Family          family_;
+    
+    NetworkInterface(ifaddrs* inaddr)
+    {
+        if_ = std::string( inaddr->ifa_name );
+        
+        if(inaddr->ifa_addr->sa_family == AF_INET6) {
+            char straddr[INET6_ADDRSTRLEN] = {};
+            struct sockaddr_in6* addr = (struct sockaddr_in6*)inaddr->ifa_addr;
+            ip_ = std::string( inet_ntop(AF_INET6, &addr->sin6_addr,
+                                         straddr, sizeof(straddr)) );
+            family_ = IPv6;
+            std::swap(addr6_, *addr);
+            
+        } else if (inaddr->ifa_addr->sa_family == AF_INET) {
+            
+            struct sockaddr_in* addr = (struct sockaddr_in*)inaddr->ifa_addr;
+            ip_ = std::string( inet_ntoa(addr->sin_addr) );        
+            family_ = IPv4;
+            std::swap(addr_, *addr);
+            
+        } else {
+            
+            family_ = UNKNOWN;
+            // Not interested
+        }
+    }
 };
 
 
 class NetworkInterfaces
 : public Runnable
-, public ActiveMsgDelegate
+, public ActiveMsg::Delegate
 {
 public:
     struct Delegate 
@@ -126,20 +126,9 @@ public:
         virtual ~Delegate() { };
     };
     
-private:
-    Delegate*           delegate_;
-    ThreadWithMessage   t_;
-    enum message_type { IDLE, INTERFACE_DETECTED };
-    message_type        message_;
-    
-    ifaddrs*                    addrs_;
-    NetworkInterface            curInterface_;
-    NetworkInterface::Family    filter_;
-    
-public:
     NetworkInterfaces(Delegate* del, NetworkInterface::Family filter)
     : delegate_(del)
-    , t_(*this, *this)
+    , t_(*this, this)
     , message_(IDLE)
     , filter_(filter)
     {        
@@ -159,6 +148,16 @@ public:
     
     virtual void run();    
     virtual void onCall(const ActiveMsg& msg);
+    
+private:
+    Delegate*           delegate_;
+    ThreadWithMessage   t_;
+    enum message_type { IDLE, INTERFACE_DETECTED };
+    message_type        message_;
+    
+    ifaddrs*                    addrs_;
+    NetworkInterface            curInterface_;
+    NetworkInterface::Family    filter_;
 };
 
 #endif // __ASYNC_NET_INTERFACE_H__

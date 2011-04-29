@@ -27,7 +27,7 @@ class LASocket;
  */
 class SocketWorker
 : public Runnable
-, public ActiveMsgDelegate
+, public ActiveMsg::Delegate
 {
 private:
     typedef std::set<SocketImpl*>    Clients;
@@ -41,7 +41,7 @@ private:
 
 public:
     SocketWorker()
-    : t_(*this, *this)
+    : t_(*this, this)
     , kq_( kqueue() )        
     { 
         t_.start();
