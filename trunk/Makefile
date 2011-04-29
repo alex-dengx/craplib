@@ -3,7 +3,7 @@ CPPFILES = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS =  $(CPPFILES:.cpp=.o)
 
 CC = g++
-CPPFLAGS = -std=gnu++98 -pedantic -DDEBUG
+CPPFLAGS = -std=gnu++98 -DDEBUG
 
 AR = ar
 ARFLAGS = rcs

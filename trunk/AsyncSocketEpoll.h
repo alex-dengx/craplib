@@ -37,7 +37,6 @@ class SocketWorker
 private:
     typedef std::set<SocketImpl*>    Clients;
     typedef std::deque<SocketImpl*>  Vec;
-    CondVar             c;
 
     Clients             clients;
     Vec                 read, write, err;
@@ -49,12 +48,9 @@ private:
     
     int                 eq;
     
-    void handleChanges();
-    
 public:
     SocketWorker()
-    : c(false)
-    , t(*this, this)
+    : t(*this, this)
     , message(IDLE)
     , eq( epoll_create(MAX_CONNECTIONS) )        
     { 
@@ -70,7 +66,6 @@ public:
     
     void registerSocket(SocketImpl* impl)
     {
-        CondLock lock(c);
         if(clients.size() >= MAX_CONNECTIONS-1) {
             wLog("can't handle this client - epoll buffer is full.");
             return;
@@ -88,38 +83,19 @@ public:
 		return;
 	}
         
-        clients.push_back(impl);
+        clients.insert(impl);
         wLog("socket attached. new clients size = %d; SOCKFD=%d", 
              clients.size(), impl->s.getSock());
-        
-        lock.set(true); // New client available
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
-        read.erase( std::remove(read.begin(), read.end(), impl), read.end());
-        write.erase( std::remove(write.begin(), write.end(), impl), write.end());
-        err.erase( std::remove(err.begin(), err.end(), impl), err.end());
-
-        CondLock lock(c);
-        clients.erase( std::remove(clients.begin(), clients.end(), impl), clients.end());        
-        
+        clients.erase( impl );
         // automatically removed from epoll
-        lock.set(true);
     }
         
     // Processed on main thread
-    virtual void onCall(const ActiveMsg& msg) {
-
-        switch(message) {
-            case ONCHANGES:
-                handleChanges();
-                break;
-                
-            default:
-                break;
-        }
-    }
+    virtual void onCall(const ActiveMsg& msg);
 
     virtual void run();
 };

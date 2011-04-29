@@ -5,6 +5,8 @@
 #ifndef __ASYNC_FILE_H__
 #define __ASYNC_FILE_H__
 
+#include <stdio.h>
+
 #include "Thread.h"
 #include "ActiveMsg.h"
 #include "Timer.h"
