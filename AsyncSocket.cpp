@@ -170,7 +170,7 @@ LASocket::LASocket(Delegate* del, const std::string& service)
         return;
     }  
     
-    if( listen(s.get_sock(), 5) < 0 )
+    if( listen(s.get_sock(), 1024) < 0 )
     {
         wLog("listen failed\n");
         return;
@@ -266,6 +266,7 @@ void LASocket::onCanRead()
 #endif
     if(cli != -1) {
         Socket sock(cli);
+        wLog("[0x%04X] LASocket::onCanRead created Socket [%d]", this, cli);
         
 #ifndef __linux__
         int set = 1;

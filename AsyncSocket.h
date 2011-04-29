@@ -107,6 +107,10 @@ public:
     
     int write(Data & data);
 	int read(Data & data);
+    
+    inline int getSock() {
+        return s.get_sock();
+    }
 };
 
 
