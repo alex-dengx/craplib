@@ -10,6 +10,7 @@
 #include <string>
 #include <deque>
 #include <map>
+#include <set>
 #include <algorithm>
 
 #include <sys/epoll.h>
@@ -31,13 +32,14 @@ class LASocket;
  */
 class SocketWorker
 : public Runnable
-, public ActiveMsgDelegate
+, public ActiveMsg::Delegate
 {
 private:
+    typedef std::set<SocketImpl*>    Clients;
     typedef std::deque<SocketImpl*>  Vec;
     CondVar             c;
 
-    Vec                 clients;
+    Clients             clients;
     Vec                 read, write, err;
     
     ThreadWithMessage   t;
@@ -52,7 +54,7 @@ private:
 public:
     SocketWorker()
     : c(false)
-    , t(*this, *this)
+    , t(*this, this)
     , message(IDLE)
     , eq( epoll_create(MAX_CONNECTIONS) )        
     { 
@@ -77,10 +79,10 @@ public:
         // Set the event filter
 	struct epoll_event ev;
 	ev.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP;
-	ev.data.fd = impl->sock;
+	ev.data.fd = impl->s.getSock();
 	ev.data.ptr = impl;
 
-	int res = epoll_ctl(eq, EPOLL_CTL_ADD, impl->sock, &ev);
+	int res = epoll_ctl(eq, EPOLL_CTL_ADD, impl->s.getSock(), &ev);
 	if(res != 0) {
         	wLog("epoll_ctl failed. couldn't add socket to epoll"); 
 		return;
@@ -88,7 +90,7 @@ public:
         
         clients.push_back(impl);
         wLog("socket attached. new clients size = %d; SOCKFD=%d", 
-             clients.size(), impl->sock);
+             clients.size(), impl->s.getSock());
         
         lock.set(true); // New client available
     }
