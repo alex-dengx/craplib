@@ -43,15 +43,11 @@ private:
     
     ThreadWithMessage   t;
     
-    enum message_enum { IDLE, ONCHANGES };
-    message_enum        message;    
-    
     int                 eq;
     
 public:
     SocketWorker()
     : t(*this, this)
-    , message(IDLE)
     , eq( epoll_create(MAX_CONNECTIONS) )        
     { 
         t.start();
@@ -73,7 +69,7 @@ public:
          
         // Set the event filter
 	struct epoll_event ev;
-	ev.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP;
+	ev.events = EPOLLIN | EPOLLOUT | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP ;// | EPOLLET;
 	ev.data.fd = impl->s.getSock();
 	ev.data.ptr = impl;
 
@@ -84,8 +80,6 @@ public:
 	}
         
         clients.insert(impl);
-        wLog("socket attached. new clients size = %d; SOCKFD=%d", 
-             clients.size(), impl->s.getSock());
     }
     
     void deregisterSocket(SocketImpl* impl)
@@ -96,7 +90,6 @@ public:
         
     // Processed on main thread
     virtual void onCall(const ActiveMsg& msg);
-
     virtual void run();
 };
 
