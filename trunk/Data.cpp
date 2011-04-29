@@ -72,7 +72,7 @@ unsigned char * Data::lock()
 {
 	if( !impl.isTheOne() )
 	{
-		Data da( size, get_data() );
+		Data da( size, getData() );
 		swap(da);
 	}
 	return impl->data;
@@ -88,7 +88,7 @@ int Data::copy(int pos, const Data & other)
 	pos = check_position(pos, size);
 	int si = std::min( size - pos, other.size );
 	unsigned char * dst = lock();
-	memmove( dst + pos, other.get_data(), si );
+	memmove( dst + pos, other.getData(), si );
 	return si;
 }
 
@@ -104,14 +104,14 @@ int Data::copy(int pos, const Data & other)
 int Data::compare(const Data & other)const
 {
 	if( size == other.size )
-		return memcmp(get_data(), other.get_data(), size);
+		return memcmp(getData(), other.getData(), size);
 	return size - other.size;
 }
 
 void DataDeque::write(const Data & data)
 {
 	m_data.push_back( data );
-	size += data.get_size();
+	size += data.getSize();
 }
 
 void DataDeque::read(Data & data, int max_size)
@@ -122,15 +122,15 @@ void DataDeque::read(Data & data, int max_size)
 		return;
 	}
 	Data & fr = m_data.front();
-	if( fr.get_size() <= max_size )
+	if( fr.getSize() <= max_size )
 	{
 		data = fr;
 		m_data.pop_front();
-		size -= data.get_size();
+		size -= data.getSize();
 		return;
 	}
 	data = Data(fr, 0, max_size);
-	fr = Data(fr, max_size, fr.get_size() - max_size);
+	fr = Data(fr, max_size, fr.getSize() - max_size);
 	size -= max_size;	
 }
 
@@ -143,5 +143,5 @@ void DataDeque::read(Data & data)
 	}
 	data = m_data.front();
 	m_data.pop_front();
-	size -= data.get_size();
+	size -= data.getSize();
 }

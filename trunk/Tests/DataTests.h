@@ -19,9 +19,9 @@ TEST(Simple, Data) {
     rassert(d1.empty()==false);
     
     d1.fill(0);
-    rassert(d1.get_data()[0] == 0);
+    rassert(d1.getData()[0] == 0);
     d1.fill(1);
-    rassert(d1.get_data()[0] == 1);
+    rassert(d1.getData()[0] == 1);
     
     rassert(d0 != d1);
     d0 = d1;

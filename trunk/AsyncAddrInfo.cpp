@@ -91,7 +91,7 @@ private:
 			AsyncAddrInfo::HostService local_work;
 			{
 				CondLock lock(has_work_or_quit, true);
-				if( thm.msg_.is_destroyed() )
+				if( thm.msg.is_destroyed() )
 					return;
 				local_work = need_work.front();
 				need_work.pop_front();
@@ -125,7 +125,7 @@ private:
 			 //			return -1;
 			 }*/
 			
-			ActiveCall call(thm.msg_);
+			ActiveCall call(thm.msg);
 			if( res )
 				freeaddrinfo(res);
 			res = local_res;

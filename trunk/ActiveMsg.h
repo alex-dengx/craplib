@@ -21,20 +21,20 @@ namespace crap {
             virtual ~Delegate() {};
         };
         
-        explicit ActiveMsg(Delegate* delegate) 
-        : c_(false)
-        , delegate_(delegate)
-        , destroyed_(false)
+        explicit ActiveMsg(Delegate* del) 
+        : c(false)
+        , delegate(del)
+        , destroyed(false)
         {
             if(!RunLoop::CurrentLoop) {
                 throw std::exception();
             }
             
             // The runloop we are working on
-            rl_ = RunLoop::CurrentLoop.get();            
+            rl = RunLoop::CurrentLoop.get();            
             RunLoop::CurrentLoop->registerMsg( this );
         }
-		bool is_destroyed()const { return destroyed_; }
+		bool is_destroyed() const { return destroyed; }
         
         ~ActiveMsg() {
             RunLoop::CurrentLoop->dequeue( this );
@@ -43,7 +43,7 @@ namespace crap {
         
         inline void onCall()
         {
-            delegate_->onCall(*this);
+            delegate->onCall(*this);
         }
     
     private:
@@ -51,66 +51,66 @@ namespace crap {
         friend class ActiveCall;
         friend class ThreadWithMessage;
         
-        CondVar                     c_;
-        Delegate                  * delegate_;
-        RunLoop                   * rl_;
-        bool                        destroyed_;
+        CondVar                     c;
+        Delegate                  * delegate;
+        RunLoop                   * rl;
+        bool                        destroyed;
         
         inline void call() 
         {
-            rl_->queue( this );
+            rl->enqueue( this );
         }
     };
     
     class ActiveCall
     {
     private:
-        ActiveMsg&  am_;
-        CondLock    lock_;
+        ActiveMsg&  am;
+        CondLock    lock;
         
     public:
         explicit ActiveCall(ActiveMsg & am)
-        : am_(am)
-        , lock_(am_.c_, 0) // 1 - between call and onCall, 0 - free or destroyed
+        : am(am)
+        , lock(am.c, 0) // 1 - between call and onCall, 0 - free or destroyed
         {
-            if( am_.destroyed_ )
+            if( am.destroyed )
                 throw std::exception();
         }
         void call()
         {
-            lock_.set(true);
-            am_.call();
+            lock.set(true);
+            am.call();
         }
     };
     
     class ThreadWithMessage
     {
     private:
-        Thread      thread_;
+        Thread      thread;
         
     public:  
-        ActiveMsg   msg_;
+        ActiveMsg   msg;
         
         explicit ThreadWithMessage(Runnable& r, ActiveMsg::Delegate* delegate)
-        : thread_(r)
-        , msg_(delegate)
+        : thread(r)
+        , msg(delegate)
         { }
         
         void start()
         {
-            return thread_.start();
+            return thread.start();
         }
         
         void requestTermination()
         {
-            CondLock lock(msg_.c_);        
-            msg_.destroyed_ = true;
+            CondLock lock(msg.c);
+            msg.destroyed = true;
             lock.set(0);
         }
         
         void waitTermination()
         {
-            return thread_.waitTermination();
+            return thread.waitTermination();
         }
     };
     

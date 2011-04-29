@@ -8,8 +8,8 @@
 void SocketWorker::run() 
 {   
     while( true ) {
-        struct kevent kqEvents_[1024];
-        int n = kevent(kq_, 0, 0, kqEvents_, 1024, NULL); // &ts        
+        struct kevent kqEvents[1024];
+        int n = kevent(kq, 0, 0, kqEvents, 1024, NULL); // &ts        
         if(n == 0) {
             continue;
         }
@@ -18,28 +18,28 @@ void SocketWorker::run()
             return;
         }
         
-        ActiveCall c(t_.msg_);        
+        ActiveCall c(t.msg);        
 
         for(int i=0; i<n; ++i) {
 
-            if(kqEvents_[i].flags & EV_ERROR) { 
-                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+            if(kqEvents[i].flags & EV_ERROR) { 
+                err.push_back( static_cast<SocketImpl*>(kqEvents[i].udata) );
                 continue;
             }
 
-            if (kqEvents_[i].flags & EV_EOF)  {
-                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+            if (kqEvents[i].flags & EV_EOF)  {
+                err.push_back( static_cast<SocketImpl*>(kqEvents[i].udata) );
                 continue;
             }
                    
-            switch(kqEvents_[i].filter) {
+            switch(kqEvents[i].filter) {
 
                 case EVFILT_READ: {
-                    read_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    read.push_back( static_cast<SocketImpl*>(kqEvents[i].udata) );
                     break;
                 }
                 case EVFILT_WRITE: {
-                    write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                    write.push_back( static_cast<SocketImpl*>(kqEvents[i].udata) );
                     break;
                 }
             }                  
@@ -54,25 +54,25 @@ void SocketWorker::onCall(const ActiveMsg& msg)
     /*
      * Process all read, write and error changes
      */
-    while( !err_.empty() ) {
-        SocketImpl* cur = err_.front();
-        err_.pop_front();     
-        if( clients_.find(cur) != clients_.end() )
+    while( !err.empty() ) {
+        SocketImpl* cur = err.front();
+        err.pop_front();     
+        if( clients.find(cur) != clients.end() )
             cur->onDisconnect();
         deregisterSocket(cur);        
     }    
     
-    while( !read_.empty() ) {
-        SocketImpl* cur = read_.front();
-        read_.pop_front();
-        if( clients_.find(cur) != clients_.end() )
+    while( !read.empty() ) {
+        SocketImpl* cur = read.front();
+        read.pop_front();
+        if( clients.find(cur) != clients.end() )
             cur->onCanRead();
     }
     
-    while( !write_.empty() ) {
-        SocketImpl* cur = write_.front();
-        write_.pop_front();
-        if( clients_.find(cur) != clients_.end() )
+    while( !write.empty() ) {
+        SocketImpl* cur = write.front();
+        write.pop_front();
+        if( clients.find(cur) != clients.end() )
             cur->onCanWrite();
     }
 }

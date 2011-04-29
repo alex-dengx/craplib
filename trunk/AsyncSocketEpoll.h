@@ -35,41 +35,41 @@ class SocketWorker
 {
 private:
     typedef std::deque<SocketImpl*>  Vec;
-    CondVar             c_;
+    CondVar             c;
 
-    Vec                 clients_;
-    Vec                 read_, write_, err_;
+    Vec                 clients;
+    Vec                 read, write, err;
     
-    ThreadWithMessage   t_;
+    ThreadWithMessage   t;
     
     enum message_enum { IDLE, ONCHANGES };
-    message_enum        message_;    
+    message_enum        message;    
     
-    int                 eq_;
+    int                 eq;
     
     void handleChanges();
     
 public:
     SocketWorker()
-    : c_(false)
-    , t_(*this, *this)
-    , message_(IDLE)
-    , eq_( epoll_create(MAX_CONNECTIONS) )        
+    : c(false)
+    , t(*this, *this)
+    , message(IDLE)
+    , eq( epoll_create(MAX_CONNECTIONS) )        
     { 
-        t_.start();
+        t.start();
     }
     
     ~SocketWorker()
     {
-        t_.requestTermination();
-        t_.waitTermination();
-        close(eq_);
+        t.requestTermination();
+        t.waitTermination();
+        close(eq);
     }
     
     void registerSocket(SocketImpl* impl)
     {
-        CondLock lock(c_);
-        if(clients_.size() >= MAX_CONNECTIONS-1) {
+        CondLock lock(c);
+        if(clients.size() >= MAX_CONNECTIONS-1) {
             wLog("can't handle this client - epoll buffer is full.");
             return;
         }
@@ -77,30 +77,30 @@ public:
         // Set the event filter
 	struct epoll_event ev;
 	ev.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP;
-	ev.data.fd = impl->sock_;
+	ev.data.fd = impl->sock;
 	ev.data.ptr = impl;
 
-	int res = epoll_ctl(eq_, EPOLL_CTL_ADD, impl->sock_, &ev);
+	int res = epoll_ctl(eq, EPOLL_CTL_ADD, impl->sock, &ev);
 	if(res != 0) {
         	wLog("epoll_ctl failed. couldn't add socket to epoll"); 
 		return;
 	}
         
-        clients_.push_back(impl);
+        clients.push_back(impl);
         wLog("socket attached. new clients size = %d; SOCKFD=%d", 
-             clients_.size(), impl->sock_);
+             clients.size(), impl->sock);
         
         lock.set(true); // New client available
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
-        read_.erase( std::remove(read_.begin(), read_.end(), impl), read_.end());
-        write_.erase( std::remove(write_.begin(), write_.end(), impl), write_.end());
-        err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
+        read.erase( std::remove(read.begin(), read.end(), impl), read.end());
+        write.erase( std::remove(write.begin(), write.end(), impl), write.end());
+        err.erase( std::remove(err.begin(), err.end(), impl), err.end());
 
-        CondLock lock(c_);
-        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());        
+        CondLock lock(c);
+        clients.erase( std::remove(clients.begin(), clients.end(), impl), clients.end());        
         
         // automatically removed from epoll
         lock.set(true);
@@ -109,7 +109,7 @@ public:
     // Processed on main thread
     virtual void onCall(const ActiveMsg& msg) {
 
-        switch(message_) {
+        switch(message) {
             case ONCHANGES:
                 handleChanges();
                 break;

@@ -27,15 +27,15 @@ class Socket
 public:
     Socket();    
     Socket(Socket& other) 
-    : sock_(0) 
+    : sock(0) 
     {
-        std::swap(this->sock_, other.sock_);
+        std::swap(this->sock, other.sock);
     }
     explicit Socket(int sock);
     ~Socket();
-	int get_sock()const { return sock_; }
+	int get_sock()const { return sock; }
 private:
-    int sock_;    
+    int sock;    
 };
 
 /**
@@ -81,23 +81,22 @@ public:
 private:
     friend class SocketWorker;
     
-    Delegate*           delegate_;
-    struct addrinfo     *addr_;
+    Delegate*           delegate;
     
     // SocketWorker delegate methods
     virtual void onDisconnect()
     {
-        delegate_->onDisconnect(*this);  
+        delegate->onDisconnect(*this);  
     }
     
     virtual void onCanRead()
     {
-        delegate_->onCanRead(*this);
+        delegate->onCanRead(*this);
     }
     
     virtual void onCanWrite()
     {
-        delegate_->onCanWrite(*this);
+        delegate->onCanWrite(*this);
     }
 public:
     RWSocket(Delegate* del, const std::string& host, const std::string& service);    
@@ -131,15 +130,15 @@ public:
     
 private:
     friend class SocketWorker;
-    Delegate            *delegate_;
+    Delegate            *delegate;
     
-    NetworkInterface    if_;
-    std::string         service_;
+    NetworkInterface    iface;
+    std::string         service;
     
     // SocketWorker delegate methods
     virtual void onDisconnect()
     {
-        delegate_->onDisconnect(*this);  
+        delegate->onDisconnect(*this);  
     }
     
     virtual void onCanRead();

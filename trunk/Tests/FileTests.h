@@ -24,9 +24,9 @@ public:
         reader_.read(2048);
     }
     
-    virtual void onChunk(const AsyncFileReader& fr, const Data& chunk) 
+    virtual void onChunk(const AsyncFileReader& fr, Data& chunk) 
     {
-        wLog("Chunk.. %d", chunk.get_size());
+        wLog("Chunk.. %d", chunk.getSize());
         reader_.read(4096); // Read more
     }
     

@@ -22,11 +22,11 @@ void SocketWorker::run()
  
         {
             // Wait till we have some clients
-            CondLock lock(c_, true);
+            CondLock lock(c, true);
         }
 
-        struct epoll_event eqEvents_[1024];
-	int n = epoll_wait(eq_, eqEvents_, 1024, -1);
+        struct epoll_event eqEvents[1024];
+	int n = epoll_wait(eq, eqEvents, 1024, -1);
 	
         if(n == 0) {
             continue;
@@ -36,13 +36,13 @@ void SocketWorker::run()
             return;
         }
         
-        ActiveCall c(t_.msg_);        
-        message_ = ONCHANGES;
+        ActiveCall c(t.msg_);        
+        message = ONCHANGES;
 
         for(int i=0; i<n; ++i) {
 
-            if(eqEvents_[i].events & EPOLLERR || eqEvents_[i].events & EPOLLHUP) { 
-                err_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            if(eqEvents[i].events & EPOLLERR || eqEvents_[i].events & EPOLLHUP) { 
+                err.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
                 continue;
             }
 	    else if(eqEvents_[i].events & EPOLLIN || eqEvents_[i].events & EPOLLPRI) {

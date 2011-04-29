@@ -7,7 +7,7 @@ void SecureRWSocket::onDisconnect(const RWSocket& sock) {
     
 }
 
-void SecureRWSocket::onRead(const RWSocket& sock, const Data& data) {
+void SecureRWSocket::onCanRead(const RWSocket& sock) {
     // Got encrypted data on Socket
     // Use ssl_ (writeEncrypted)
     // to get plain data
@@ -19,8 +19,4 @@ void SecureRWSocket::onCanWrite(const RWSocket& sock) {
     // and then
     // Can get some more encrypted data from ssl_ (readEncrypted)
     // and put it into the sock
-}
-
-void SecureRWSocket::onError(const RWSocket& sock) {
-    
 }

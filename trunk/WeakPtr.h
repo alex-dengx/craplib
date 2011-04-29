@@ -21,55 +21,55 @@ namespace crap {
         
         // Shared data
         struct Counters {
-            Threads::counter    sc_;	
-            Threads::counter    wc_;	
+            Threads::counter    sc;	
+            Threads::counter    wc;	
         };
         
         static Counters forNulls;
         
-        T          * pObj_;		// Managed by SharedPtr
-        Counters   * cnt_;      // Managed by WeakPtr
+        T          * pObj;		// Managed by SharedPtr
+        Counters   * cnt;       // Managed by WeakPtr
         
         void attach() 
         {
-            Threads::interlocked_increment(&cnt_->wc_);
+            Threads::interlocked_increment(&cnt->wc);
         }
         
         void detach() 
         {
-            if( Threads::interlocked_decrement(&cnt_->wc_) == 0 ) {            
-                delete cnt_;
+            if( Threads::interlocked_decrement(&cnt->wc) == 0 ) {            
+                delete cnt;
             }
         }
         
         // Used by SharedPtr only
         WeakPtr(T* p)
-        : pObj_(p)
-        , cnt_( new Counters )
+        : pObj(p)
+        , cnt( new Counters )
         {
-            cnt_->sc_ = 0;
-            cnt_->wc_ = 0;        
+            cnt->sc = 0;
+            cnt->wc = 0;        
             attach();
         }
         
     public:
         WeakPtr() 
-        : pObj_(NULL)
-        , cnt_(&forNulls)
+        : pObj(NULL)
+        , cnt(&forNulls)
         {
             attach();
         }
         
         WeakPtr(const WeakPtr<T>& r)
-        : pObj_(r.pObj_)
-        , cnt_(r.cnt_)
+        : pObj(r.pObj)
+        , cnt(r.cnt)
         { 
             attach();
         }
         void swap(WeakPtr<T>& other)
         {
-            std::swap(pObj_, other.pObj_);
-            std::swap(cnt_, other.cnt_);
+            std::swap(pObj, other.pObj);
+            std::swap(cnt, other.cnt);
         }    
         WeakPtr<T>& operator= (const WeakPtr<T>& r) 
         {
@@ -79,8 +79,8 @@ namespace crap {
         }
         
         WeakPtr(SharedPtr<T>& p)
-        : pObj_(p.ptr_.pObj_)
-        , cnt_(p.ptr_.cnt_)
+        : pObj(p.ptr.pObj)
+        , cnt(p.ptr.cnt)
         {
             attach();
         }
@@ -92,11 +92,11 @@ namespace crap {
         
         SharedPtr<T> lock() 
         { 
-            Threads::counter c = Threads::interlocked_increment(&cnt_->sc_);
+            Threads::counter c = Threads::interlocked_increment(&cnt->sc);
             SharedPtr<T> result;
             if( c != 1 )
-                result = SharedPtr<T>(pObj_, cnt_);
-            Threads::interlocked_decrement(&cnt_->sc_);
+                result = SharedPtr<T>(pObj, cnt);
+            Threads::interlocked_decrement(&cnt->sc);
             
             return result; 
         }

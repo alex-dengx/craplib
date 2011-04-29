@@ -44,7 +44,7 @@ public:
         int bytes = 0;
         while(0 != (bytes = sock_.read(data_))) {
             wLog("Got %d bytes from socket..", bytes);        
-            wLog("DATA: %s", std::string(data_.get_data(), data_.get_data()+bytes).c_str());
+            wLog("DATA: %s", std::string(data_.getData(), data_.getData()+bytes).c_str());
         }
     }
     
@@ -98,7 +98,7 @@ public:
     {
         RunLoop runloop;
         wLog("Starting runloop for interface: %s; listening on %s", 
-             if_.name().c_str(), if_.ip().c_str());
+             if_.name.c_str(), if_.ip.c_str());
         
         LASocket sock(this, if_, "8090");
         
@@ -119,7 +119,7 @@ public:
     , sock_(this, if_, "8090")
     {
         wLog("Starting runloop for interface: %s; listening on %s", 
-             if_.name().c_str(), if_.ip().c_str());        
+             if_.name.c_str(), if_.ip.c_str());        
     }
     
     ~Server()
@@ -159,7 +159,7 @@ public:
     virtual void onInterfaceDetected(const NetworkInterfaces& nif, const NetworkInterface& iface) 
     {
         wLog("Got detected network interface: %s IP: %s", 
-             iface.name().c_str(), iface.ip().c_str());
+             iface.name.c_str(), iface.ip.c_str());
         
         // Start server for that
         servers.push_back( ServerPtr( new Server(iface) ) );
