@@ -14,20 +14,20 @@
 
 void SocketWorker::run() 
 {
-//    timespec ts;
-//    ts.tv_sec = 0;
-//    ts.tv_nsec = 1000;
+    //    timespec ts;
+    //    ts.tv_sec = 0;
+    //    ts.tv_nsec = 1000;
     
     while( true ) {
- 
+        
         {
             // Wait till we have some clients
             CondLock lock(c, true);
         }
-
+        
         struct epoll_event eqEvents[1024];
-	int n = epoll_wait(eq, eqEvents, 1024, -1);
-	
+        int n = epoll_wait(eq, eqEvents, 1024, -1);
+        
         if(n == 0) {
             continue;
         }
@@ -36,81 +36,56 @@ void SocketWorker::run()
             return;
         }
         
-        ActiveCall c(t.msg_);        
+        ActiveCall c(t.msg);        
         message = ONCHANGES;
-
+        
         for(int i=0; i<n; ++i) {
-
-            if(eqEvents[i].events & EPOLLERR || eqEvents_[i].events & EPOLLHUP) { 
-                err.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            
+            if(eqEvents[i].events & EPOLLERR || eqEvents[i].events & EPOLLHUP) { 
+                err.push_back( static_cast<SocketImpl*>(eqEvents[i].data.ptr) );
                 continue;
             }
-	    else if(eqEvents_[i].events & EPOLLIN || eqEvents_[i].events & EPOLLPRI) {
-
-                    read_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            else if(eqEvents[i].events & EPOLLIN || eqEvents[i].events & EPOLLPRI) {
+                
+                read.push_back( static_cast<SocketImpl*>(eqEvents[i].data.ptr) );
             }
-	    else if(eqEvents_[i].events & EPOLLOUT) {
-
-                    write_.push_back( static_cast<SocketImpl*>(eqEvents_[i].data.ptr) );
+            else if(eqEvents[i].events & EPOLLOUT) {
+                
+                write.push_back( static_cast<SocketImpl*>(eqEvents[i].data.ptr) );
             }                                        
         }   
         
-        wLog("epoll sizes n=%d; read=%d; write=%d; err=%d", n, read_.size(), write_.size(), err_.size());
+        wLog("epoll sizes n=%d; read=%d; write=%d; err=%d", n, read.size(), write.size(), err.size());
         c.call();
     }
 }
 
-void SocketWorker::handleChanges()
+void SocketWorker::onCall(const ActiveMsg& msg)
 {
     /*
      * Process all read, write and error changes
      */
-    while( !read_.empty() ) {
-        SocketImpl* cur = read_.front();
-        read_.pop_front();
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
-        
-		cur->onRead(); // new client
-/*        if( cur->isListening() ) {
-            cur->onRead(); // new client
-            
-        } else {
-            
-            // Try to actually read
-            int bytes = (int)cur->readData();
-            if(bytes > 0) {
-                cur->onRead();
-            } else if(bytes == 0) {
-                cur->onDisconnect();                
-                deregisterSocket(cur);
-            }
-            else {
-                cur->onError();                
-                deregisterSocket(cur);
-            }
-        } */
-    }
-    
-    while( !write_.empty() ) {
-        SocketImpl* cur = write_.front();
-        write_.pop_front();
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
-        
-        if( cur->wantWrite() ) {
-            cur->onCanWrite();
-        }
-    }
-    
-    while( !err_.empty() ) {
-        SocketImpl* cur = err_.front();
-        err_.pop_front();        
-        if(find(clients_.begin(), clients_.end(), cur ) == clients_.end())
-            continue;
-
-        cur->onError();
+    while( !err.empty() ) {
+        SocketImpl* cur = err.front();
+        err.pop_front();     
+        if( clients.find(cur) != clients.end() )
+            cur->onDisconnect();
+        deregisterSocket(cur);        
     }    
+    
+    while( !read.empty() ) {
+        SocketImpl* cur = read.front();
+        read.pop_front();
+        if( clients.find(cur) != clients.end() )
+            cur->onCanRead();
+    }
+    
+    while( !write.empty() ) {
+        SocketImpl* cur = write.front();
+        write.pop_front();
+        if( clients.find(cur) != clients.end() )
+            cur->onCanWrite();
+    }
 }
 
 #endif // _CRAP_SOCKET_EPOLL_
