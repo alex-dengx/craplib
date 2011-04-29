@@ -33,7 +33,7 @@ public:
     }
     explicit Socket(int sock);
     ~Socket();
-	int get_sock()const { return sock; }
+	int getSock()const { return sock; }
 private:
     int sock;    
 };
@@ -108,7 +108,7 @@ public:
 	int read(Data & data);
     
     inline int getSock() {
-        return s.get_sock();
+        return s.getSock();
     }
 };
 
@@ -149,7 +149,6 @@ public:
     virtual ~LASocket();
     
 };
-
 
 #if defined(__MACH__)
 

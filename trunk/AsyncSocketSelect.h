@@ -27,72 +27,72 @@ class LASocket;
  */
 class SocketWorker
 : public Runnable
-, public ActiveMsgDelegate
+, public ActiveMsg::Delegate
 {
 private:
     typedef std::deque<SocketImpl*>      Container;
-    CondVar                              c_;
+    CondVar                              c;
 
-    Container                            clients_;
-    Container                            read_, write_, err_;
+    Container                            clients;
+    Container                            read, write, err;
     
-    ThreadWithMessage                    t_;
+    ThreadWithMessage                    t;
     
     enum message_enum { IDLE, ONCHANGES };
-    message_enum        message_;    
+    message_enum        message;    
     
-    fd_set              read_fd;
-    fd_set              write_fd;
-    fd_set              err_fd;
+    fd_set              readfd;
+    fd_set              writefd;
+    fd_set              errfd;
 
-    fd_set              read_fd_copy;
-    fd_set              write_fd_copy;
-    fd_set              err_fd_copy;
+    fd_set              readfd_copy;
+    fd_set              writefd_copy;
+    fd_set              errfd_copy;
     
     void handleChanges();
     
 public:
     SocketWorker()
-    : c_(false)
-    , t_(*this, *this)
-    , message_(IDLE)
+    : c(false)
+    , t(*this, this)
+    , message(IDLE)
     { 
-        t_.start();
+        t.start();
     }
     
     ~SocketWorker()
     {
-        t_.requestTermination();
-        t_.waitTermination();
+        t.requestTermination();
+        t.waitTermination();
     }
     
     void registerSocket(SocketImpl* impl)
     {
-        CondLock lock(c_);
-        if(impl->sock_ >= FD_SETSIZE) {
+        CondLock lock(c);
+        if(impl->s.getSock() >= FD_SETSIZE) {
             wLog("can't handle this client - select is full.");
             return;
         }
-        clients_.push_back( impl );
+        clients.push_back( impl );
         lock.set(true); // New client available
     }
     
     void deregisterSocket(SocketImpl* impl)
     {
-        CondLock lock(c_);
+        CondLock lock(c);
         
-        clients_.erase( std::remove(clients_.begin(), clients_.end(), impl), clients_.end());
-        read_.erase( std::remove(read_.begin(), read_.end(), impl), read_.end());
-        write_.erase( std::remove(write_.begin(), write_.end(), impl), write_.end());
-        err_.erase( std::remove(err_.begin(), err_.end(), impl), err_.end());
+        clients.erase( std::remove(clients.begin(), clients.end(), impl), clients.end());
+        read.erase( std::remove(read.begin(), read.end(), impl), read.end());
+        write.erase( std::remove(write.begin(), write.end(), impl), write.end());
+        err.erase( std::remove(err.begin(), err.end(), impl), err.end());
         
-        lock.set(!clients_.empty());
+        lock.set(!clients.empty());
     }
         
     // Processed on main thread
     virtual void onCall(const ActiveMsg& msg) {
 
-        switch(message_) {
+        switch(message) {
             case ONCHANGES:
                 handleChanges();
                 break;
