@@ -10,6 +10,50 @@
 #include "Timer.h"
 #include "LogUtil.h"
 
+
+class FileReader
+{
+public:
+    FileReader(const std::string& filename)
+    : fp_(NULL)
+    , fileSize_(0)
+    {        
+        if( !(fp_ = fopen(filename.c_str(), "rb")) ) {
+            throw std::exception();
+        }   
+        
+        // Get file size
+        fseek(fp_, 0 , SEEK_END);
+        fileSize_ = ftell(fp_);
+        fseek(fp_, 0, SEEK_SET);
+    }
+    
+    ~FileReader()
+    {
+        if(fp_)
+            fclose(fp_);
+    }
+    
+    Data read(int size) {        
+        if(!fp_) 
+            return Data(0);
+        
+        Data buffer(size);
+        int bsz = (int)fread(buffer.lock(), 1, size, fp_);        
+        return Data(buffer, 0, bsz);
+    }
+    
+    long filesize() const {
+        return fileSize_;
+    }
+    
+private:    
+    FILE                *fp_;
+    long                fileSize_;    
+};
+
+
+
 class AsyncFileReader
 : public TimerDelegate
 {
