@@ -30,5 +30,5 @@ void Timer::set(double time)   // Put this timer on the RunLoop
 
 void Timer::process() 
 {
-    delegate_.onTimer(*this);
+    delegate_->onTimer(*this);
 }

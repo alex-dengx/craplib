@@ -55,7 +55,7 @@ private:
 
 
 class AsyncFileReader
-: public TimerDelegate
+: public Timer::Delegate
 {
 public:
     struct Delegate {
@@ -68,7 +68,7 @@ public:
     AsyncFileReader(Delegate* del, const std::string& filename)
     : delegate_(del)
     , fp_(NULL)
-    , timer_(*this)
+    , timer_(this)
     , fileSize_(0)
     {        
         if( !(fp_ = fopen(filename.c_str(), "rb")) ) {

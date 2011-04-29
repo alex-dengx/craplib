@@ -26,6 +26,11 @@ void SocketWorker::run()
                 err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                 continue;
             }
+
+            if (kqEvents_[i].flags & EV_EOF)  {
+                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
+                continue;
+            }
                    
             switch(kqEvents_[i].filter) {
 
@@ -37,12 +42,7 @@ void SocketWorker::run()
                     write_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
                     break;
                 }
-            }      
-            
-            if (kqEvents_[i].flags & EV_EOF)  {
-                err_.push_back( static_cast<SocketImpl*>(kqEvents_[i].udata) );
-                continue;
-            }
+            }                  
         }   
         
         c.call();
@@ -54,6 +54,14 @@ void SocketWorker::onCall(const ActiveMsg& msg)
     /*
      * Process all read, write and error changes
      */
+    while( !err_.empty() ) {
+        SocketImpl* cur = err_.front();
+        err_.pop_front();     
+        if( clients_.find(cur) != clients_.end() )
+            cur->onDisconnect();
+        deregisterSocket(cur);        
+    }    
+    
     while( !read_.empty() ) {
         SocketImpl* cur = read_.front();
         read_.pop_front();
@@ -67,14 +75,6 @@ void SocketWorker::onCall(const ActiveMsg& msg)
         if( clients_.find(cur) != clients_.end() )
             cur->onCanWrite();
     }
-    
-    while( !err_.empty() ) {
-        SocketImpl* cur = err_.front();
-        err_.pop_front();        
-        deregisterSocket(cur);
-        if( clients_.find(cur) != clients_.end() )
-            cur->onDisconnect();
-    }    
 }
 
 #endif // _CRAP_SOCKET_KEVENT_
