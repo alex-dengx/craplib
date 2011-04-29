@@ -58,9 +58,9 @@ public:
     {
         // Set the event filter
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.getSock(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, impl);
         kevent(kq, &changeLst, 1, 0, 0, NULL);                
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, impl);
+        EV_SET(&changeLst, impl->s.getSock(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, impl);
         kevent(kq, &changeLst, 1, 0, 0, NULL);        
         
         clients.insert(impl);
@@ -69,9 +69,9 @@ public:
     void deregisterSocket(SocketImpl* impl)
     {
         struct kevent changeLst;
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_READ, EV_DELETE, 0, 0, 0);
+        EV_SET(&changeLst, impl->s.getSock(), EVFILT_READ, EV_DELETE, 0, 0, 0);
         kevent(kq, &changeLst, 1, 0, 0, NULL);        
-        EV_SET(&changeLst, impl->s.get_sock(), EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+        EV_SET(&changeLst, impl->s.getSock(), EVFILT_WRITE, EV_DELETE, 0, 0, 0);
         kevent(kq, &changeLst, 1, 0, 0, NULL);        
         
         clients.erase(impl);
