@@ -72,7 +72,28 @@ namespace crap {
         bool operator<=(const Data & other)const{return compare( other ) <= 0;}
         bool operator>=(const Data & other)const{return compare( other ) >= 0;}
     };
-    
+	
+	class DataInputStream
+	{
+	public:
+		virtual int read(Data & data)=0;
+		virtual ~DataInputStream()
+		{}
+	};
+	class DataOutputStream
+	{
+	public:
+		virtual int write(Data & data)=0;
+		virtual ~DataOutputStream()
+		{}
+	};
+	class DataStreamBridge
+	{
+	public:	
+		Data buffer;
+		void move_data(DataInputStream & sin, DataOutputStream & sout);
+	};
+	
 	class DataDeque
 	{
 	public:

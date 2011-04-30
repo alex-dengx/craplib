@@ -108,6 +108,19 @@ int Data::compare(const Data & other)const
 	return size - other.size;
 }
 
+void DataStreamBridge::move_data(DataInputStream & sin, DataOutputStream & sout)
+{
+	while(true)
+	{
+		if( buffer.empty() )
+			if( sin.read(buffer) == 0 )
+				break; // Was nothing to write, and nothing have been read
+		sout.write(buffer);
+		if( !buffer.empty() )
+			break;
+	}
+}
+
 void DataDeque::write(const Data & data)
 {
 	m_data.push_back( data );
