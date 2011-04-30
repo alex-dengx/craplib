@@ -14,47 +14,49 @@
 
 
 class FileReader
+: public DataInputStream
 {
 public:
-    FileReader(const std::string& filename)
-    : fp(NULL)
-    , fileSize(0)
+    explicit FileReader(const std::string& filename)
+    : fp(fopen(filename.c_str(), "rb"))
     {        
-        if( !(fp = fopen(filename.c_str(), "rb")) ) {
+        if( !fp ) // This if saves us all other ifs
             throw std::exception();
-        }   
-        
-        // Get file size
-        fseek(fp, 0 , SEEK_END);
-        fileSize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
     }
-    
-    ~FileReader()
-    {
-        if(fp)
-            fclose(fp);
-    }
-    
-    Data read(int size) {        
-        if(!fp) 
-            return Data(0);
-        
+	Data read(int size) {
         Data buffer(size);
         int bsz = (int)fread(buffer.lock(), 1, size, fp);        
         return Data(buffer, 0, bsz);
     }
-    
-    long filesize() const {
-        return fileSize;
+    virtual ~FileReader() {
+		fclose(fp);
     }
-    
-private:    
+	virtual int read(Data & data) {
+		data = read(64*1024);
+		return data.getSize();
+	}
+
+    int filesize() const {
+        // Get file size
+        off_t was = ftello(fp);
+		fseeko(fp, 0 , SEEK_END);
+        int result = ftello(fp); // Overflow possible
+        fseeko(fp, was, SEEK_SET);
+        return result;
+    }
+
+	static Data read_file(const std::string& filename) // If this fun is used, empty Data for non-existent file is ok
+	{
+		try {
+			FileReader fr(filename);
+			return fr.read(fr.filesize());
+		} catch( const std::exception & ex) {
+		}
+		return Data();
+	}
+private:
     FILE                *fp;
-    long                fileSize;    
 };
-
-
 
 class AsyncFileReader
 : public Timer::Delegate

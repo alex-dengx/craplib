@@ -66,7 +66,9 @@ private:
  * Asynchronous read-write socket implementation
  */
 class RWSocket
-: private SocketImpl
+: public DataInputStream
+, public DataOutputStream
+, private SocketImpl
 , private StaticRefCounted<SocketWorker>
 {
 public:
@@ -101,12 +103,12 @@ private:
 public:
     RWSocket(Delegate* del, const std::string& host, const std::string& service);    
     RWSocket(Delegate* del, Socket& sock);    
-    
+
     virtual ~RWSocket();
-    
-    int write(Data & data);
-	int read(Data & data);
-    
+
+    virtual int write(Data & data);
+	virtual int read(Data & data);
+
     inline int getSock() {
         return s.getSock();
     }
