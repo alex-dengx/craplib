@@ -10,54 +10,61 @@
 #include "LogUtil.h"
 
 #include <string>
+#include <openssl/ssl.h>
+#include <openssl/x509.h>
+#include <openssl/pkcs12.h>
+#include <openssl/err.h>
 
-/**
- * This class gets automatically constructed when SSL is needed first time
- * and is being destructed when there are no more SSL contexts in the application
- */
-class SSLLoader
-{
-public:    
-    SSLLoader()
-    {
-        // TODO: load openssl library
-        wLog("Load SSL library..");
-    }
-    
-    ~SSLLoader()
-    {
-        // TODO: free openssl library
-        wLog("UnLoad SSL library..");
-    }
-};
+namespace ssl {
+	
+	class Init
+	{
+	public:	
+		Init();
+		~Init();
+	};
 
-class SSLContext
-: private StaticRefCounted<SSLLoader>
-{
-public:
-    SSLContext(const std::string& key, const std::string& pass=std::string(""))
-    { 
-        // TODO: create a SSL_CTX
-        wLog("SSL context being initialized: %s", key.c_str());
-    }
+	class ContextWrapper
+	{
+		SSL_CTX * ctx;		
+	public:
+		SSL_CTX * getCtx()const { return ctx; }
+		explicit ContextWrapper(SSL_METHOD *meth):ctx(SSL_CTX_new(meth))
+		{}
+		~ContextWrapper()
+		{
+			SSL_CTX_free(ctx);
+		}
+	};
+	
+	enum engine_enum { SERVER, CLIENT };
 
-    ~SSLContext()
-    {
-        // TODO: free the context
-    }
-};
+	class Engine
+	: public DataInputStream
+	, public DataOutputStream
+	{
+	public:
+		explicit Engine(ContextWrapper & ctx, engine_enum kind);
+		virtual ~Engine();
+		SSL * getSSL()const { return ssl; }
+		bool set_p12_certificate_privatekey(const Data & data, const std::string & password);
+		bool set_pem_certificate_privatekey(const Data & data, const std::string & password);
+		virtual int read(Data & data); // Read application data
+		virtual int write(Data & data); // Write application data
+		void transfer_data(DataInputStream & network_in, DataOutputStream & network_out);
+		int get_verify_error();
+	private:
+		SSL * ssl;
+		BIO * bioIn;
+		BIO * bioOut;
+		
+		bool checked_peer_certificate;
+		Data waiting_to_app_data;
+		Data waiting_to_socket_data;
+		void read_app();
+		void read_socket(DataInputStream & network_in);
+		void write_socket(DataOutputStream & network_out);
+	};
 
-
-/**
- * This class is used to completely decouple SSL byte-streams from transport layer
- */
-class SSLTube
-{
-public:
-    bool readEncrypted(Data& bytes);       // Returns true if read something into bytes
-    bool readDecrypted(Data& bytes);       // ---- " ---- " ----
-    size_t writeEncrypted(Data& bytes);    // Returns written bytes count
-    size_t writeDecrypted(Data& bytes);    // ---- " ---- " ----
-};
-
+}
 #endif // __ASYNC_SSL_H__
