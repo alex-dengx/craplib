@@ -113,7 +113,7 @@ int RWSocket::write(Data & data)
 int RWSocket::read(Data & data) 
 {
     // Read data
-    Data d(65536);
+    Data d(65536); // Hrissan - this effectively allocs 64k per read (event if nothing to read) - lots of memory!
 #ifdef __linux__
     int r = (int)recv(s.getSock(), d.lock(), d.getSize(), MSG_NOSIGNAL);
 #else

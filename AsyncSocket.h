@@ -79,10 +79,9 @@ public:
         virtual void onCanWrite(const RWSocket&) = 0;
         virtual ~Delegate() { }
     };
-    
 private:
     friend class SocketWorker;
-    
+
     Delegate*           delegate;
     
     // SocketWorker delegate methods

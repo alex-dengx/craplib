@@ -34,6 +34,7 @@ public:
     , ready(false)
     , limit(lim)
     , count(0)
+	, code(0)
     , lineNum(0)
     , state(IDLE)
 	{
@@ -111,9 +112,9 @@ public:
     }
     
     Data getData();
-    
+
 private:
-    Data data;
+    std::string first_line;
     std::map<std::string, std::string> headers;
 };
 

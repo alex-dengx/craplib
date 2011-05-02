@@ -29,9 +29,12 @@ void HTTPHeadersParser::parseLine(const std::string& line)
         ss >> key;
         std::getline(ss, value, '\n');
 
-        *key.rbegin() = '\0'; // remove ':'        
+		if( key.empty() || value.empty() ) // Hrissan: your server will crash without it, guy!
+			return;
+        // *key.rbegin() = '\0'; // remove ':'  Hrissan: WTF??? Forget this stupidness forever!
+		key.resize( key.size() - 1 );
 
-        // FIXME: this is probably slow with this substr
+        // FIXME: this is probably slow with this substr Hrissan: HaHaHa
         headers.insert( std::make_pair(key, value.substr(1, value.length())) );
     }
 }
@@ -84,11 +87,11 @@ void HTTPHeadersParser::write(Data& data)
 
 Data HTTPHeadersWriter::getData()
 {
-    if(data.empty())
+    if(first_line.empty())
         throw std::exception(); // You should set response or request first
     
     std::stringstream ss;
-    ss << std::string(data.getData(), data.getData()+data.getSize());
+    ss << first_line;
     
     for(std::map<std::string, std::string>::const_iterator it=headers.begin();
             it!=headers.end(); ++it) 
@@ -98,6 +101,8 @@ Data HTTPHeadersWriter::getData()
     }
     
     ss << "\r\n";
+	first_line.clear();
+	headers.clear();
     return Data((int)ss.str().length(), ss.str().c_str());
 }
 
@@ -105,14 +110,14 @@ void HTTPHeadersWriter::setResponse(HTTPVersion version, int code, const std::st
 {
     std::stringstream ss;
     ss << versionToString(version) << " " << code << " " << status << "\r\n";
-    data = Data((int)ss.str().length(), ss.str().c_str());
+    first_line = ss.str();
 }
 
 void HTTPHeadersWriter::setRequest(HTTPMethod method, const std::string& query, HTTPVersion version)
 {
     std::stringstream ss;
     ss << methodToString(method) << " " << query << " " << versionToString(version) << "\r\n";
-    data = Data((int)ss.str().length(), ss.str().c_str());
+    first_line = ss.str();
 }
 
 
