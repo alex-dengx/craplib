@@ -71,7 +71,7 @@ public:
     }
     
     void setResponse(HTTPVersion version, int code, const std::string& status);
-    void setRequest(HTTPMethod method, const std::string& query, double version);
+    void setRequest(HTTPMethod method, const std::string& query, HTTPVersion version);
     
     static std::string methodToString(HTTPMethod method) 
     {
