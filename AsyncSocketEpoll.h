@@ -69,7 +69,7 @@ public:
          
         // Set the event filter
 	struct epoll_event ev;
-	ev.events = EPOLLIN | EPOLLOUT | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP ;// | EPOLLET;
+	ev.events = EPOLLIN | EPOLLOUT | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP | EPOLLET;
 	ev.data.fd = impl->s.getSock();
 	ev.data.ptr = impl;
 
