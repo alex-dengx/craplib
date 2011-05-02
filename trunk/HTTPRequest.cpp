@@ -104,14 +104,14 @@ Data HTTPHeadersWriter::getData()
 void HTTPHeadersWriter::setResponse(HTTPVersion version, int code, const std::string& status) 
 {
     std::stringstream ss;
-    ss << "HTTP/" << versionToString(version) << " " << code << " " << status << "\r\n";
+    ss << versionToString(version) << " " << code << " " << status << "\r\n";
     data = Data((int)ss.str().length(), ss.str().c_str());
 }
 
-void HTTPHeadersWriter::setRequest(HTTPMethod method, const std::string& query, double version)
+void HTTPHeadersWriter::setRequest(HTTPMethod method, const std::string& query, HTTPVersion version)
 {
     std::stringstream ss;
-    ss << methodToString(method) << " " << query << " " << "HTTP/" << version << "\r\n";
+    ss << methodToString(method) << " " << query << " " << versionToString(version) << "\r\n";
     data = Data((int)ss.str().length(), ss.str().c_str());
 }
 
