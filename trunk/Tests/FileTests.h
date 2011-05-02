@@ -10,7 +10,7 @@
 #include "Data.h"
 
 SUITE(File);
-
+/*
 class SimpleReader 
 : AsyncFileReader::Delegate
 {
@@ -46,5 +46,5 @@ TEST(BasicReading, File) {
     SimpleReader reader;
     rl.run();
 };
-
+*/
 #endif // __FILE_TESTS_H__

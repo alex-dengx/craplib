@@ -124,10 +124,10 @@ private:
                 delegate->onError(*this);
             }
         } else {
-            delegate->onChunk(*this, buffer);
-            buffer = Data();
+	    Data tmp = buffer;
+	    buffer = Data();
+            delegate->onChunk(*this, tmp);
         }
     }
 };
-
 #endif // __ASYNC_FILE_H__
