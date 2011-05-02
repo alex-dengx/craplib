@@ -23,6 +23,8 @@
 		246F6E7A1365E19B0095F396 /* POSIX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A7B13325A010004C635 /* POSIX.cpp */; };
 		246F6EB21365F66E0095F396 /* Tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3EC133A117C0017276F /* Tests.cpp */; };
 		246F6EB31365F6740095F396 /* libcrap.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 246F6E491365E12F0095F396 /* libcrap.a */; };
+		246F6F34136F24870095F396 /* HTTPRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 246F6F32136F24870095F396 /* HTTPRequest.h */; };
+		246F6F35136F24870095F396 /* HTTPRequest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 246F6F33136F24870095F396 /* HTTPRequest.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +71,8 @@
 		246F6EA91365F6560095F396 /* Tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		246F6EAC1365F6560095F396 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		246F6EAE1365F6560095F396 /* Tests.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Tests.1; sourceTree = "<group>"; };
+		246F6F32136F24870095F396 /* HTTPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPRequest.h; sourceTree = "<group>"; };
+		246F6F33136F24870095F396 /* HTTPRequest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPRequest.cpp; sourceTree = "<group>"; };
 		248C1A85134FE31B00103E24 /* SSLTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSLTests.h; path = Tests/SSLTests.h; sourceTree = "<group>"; };
 		248C1A88134FE3C200103E24 /* AsyncSSL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSSL.cpp; sourceTree = "<group>"; };
 		248C1A89134FE3C200103E24 /* AsyncSSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSSL.h; sourceTree = "<group>"; };
@@ -255,6 +259,8 @@
 		246F6F2C136F1F950095F396 /* HTTP */ = {
 			isa = PBXGroup;
 			children = (
+				246F6F32136F24870095F396 /* HTTPRequest.h */,
+				246F6F33136F24870095F396 /* HTTPRequest.cpp */,
 			);
 			name = HTTP;
 			sourceTree = "<group>";
@@ -315,6 +321,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				246F6F34136F24870095F396 /* HTTPRequest.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,6 +405,7 @@
 				246F6E6F1365E19B0095F396 /* Data.cpp in Sources */,
 				246F6E751365E19B0095F396 /* Thread.cpp in Sources */,
 				246F6E7A1365E19B0095F396 /* POSIX.cpp in Sources */,
+				246F6F35136F24870095F396 /* HTTPRequest.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
