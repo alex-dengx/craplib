@@ -40,9 +40,9 @@ public:
         // Get file size
         off_t was = ftello(fp);
 		fseeko(fp, 0 , SEEK_END);
-        int result = ftello(fp); // Overflow possible
+        off_t result = ftello(fp); // Overflow possible
         fseeko(fp, was, SEEK_SET);
-        return result;
+        return (int)result;
     }
 
 	static Data read_file(const std::string& filename) // If this fun is used, empty Data for non-existent file is ok
@@ -124,8 +124,8 @@ private:
                 delegate->onError(*this);
             }
         } else {
-	    Data tmp = buffer;
-	    buffer = Data();
+            Data tmp = buffer;
+            buffer = Data();
             delegate->onChunk(*this, tmp);
         }
     }
