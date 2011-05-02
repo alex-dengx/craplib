@@ -1,36 +1,173 @@
-//
-//  HTTPRequest.h
-//  craplib
-//
-//  Created by Григорий Бутейко on 22.04.11.
-//  Copyright 2011 VITO. All rights reserved.
-//
+// This code is licensed under New BSD Licence. For details see project page at
+// http://code.google.com/p/craplib/source/checkout
 
 #pragma once
-#include "AsyncSocket.h"
+#ifndef __HTTP_REQUEST_H__
+#define __HTTP_REQUEST_H__
 
-class HTTPRequest : private RWSocket::Delegate {
-public:
-	class Delegate : public RWSocket::Delegate {
-	public:
-		virtual void onHeader(HTTPRequest * who, const std::string& name, const std::string& value)=0;
-		virtual void onFinishHeaders(HTTPRequest * who)=0;
-		virtual void onBodyFinished(HTTPRequest * who)=0;
-		virtual ~Delegate()
-		{}
-	};
-	HTTPRequest(Delegate * delegate, const std::string& host, const std::string& service):delegate(delegate), socket(this, host, service)
-	{}
-	HTTPRequest(Delegate * delegate, Socket& sock):delegate(delegate), socket(this, sock)
-	{}
-	void sendHeader(const std::string& header);
-	void startBody(long long content_size);
-	void sendChunk(const Data & chunk);
-private:
-	Delegate * delegate;
-	RWSocket socket;
-	virtual void onDisconnect(const RWSocket&);
-	virtual void onRead(const RWSocket&, const Data&);
-	virtual void onCanWrite(const RWSocket&);
-	virtual void onError(const RWSocket&);
+#include "AsyncSocket.h"
+#include <sstream>
+#include <memory>
+
+enum HTTPMethod {
+    InvalidMethod,
+    GET,
+    POST,
+    HEAD,
+    PUT,
+    DELETE
 };
+
+enum HTTPVersion {
+    InvalidVersion,
+    HTTP_1_0,
+    HTTP_1_1
+};
+
+class HTTPHeadersParser
+{
+public:
+    enum Type { REQUEST, RESPONSE };
+    
+	HTTPHeadersParser(Type tp, long lim = 4*1024)
+    : type(tp)
+    , ready(false)
+    , limit(lim)
+    , count(0)
+    , lineNum(0)
+    , state(IDLE)
+	{
+    }
+	
+    void write(Data & data);
+	
+    bool isReady()
+	{
+        return ready;
+	}
+		
+    std::string method, version, action, status;
+    int code;
+    
+    std::map<std::string, std::string> headers;
+    
+private:
+    Type type;
+    bool ready;
+    long limit, count;
+    int lineNum;
+    
+    void parseLine(const std::string& line);    
+    enum { IDLE, HEADER, FIRST_R, FIRST_N, SECOND_R } state;
+    
+    std::stringstream buf;
+};
+
+class HTTPHeadersWriter
+{
+public:
+	void addHeader(const std::string & name, const std::string & value) {
+        headers.insert( std::make_pair(name, value) );
+    }
+    
+    void setResponse(HTTPVersion version, int code, const std::string& status);
+    void setRequest(HTTPMethod method, const std::string& query, double version);
+    
+    static std::string methodToString(HTTPMethod method) 
+    {
+        switch((int)method) {
+            case GET:
+                return "GET";
+                break;
+            case POST:
+                return "POST";
+                break;
+            case PUT:
+                return "PUT";
+                break;
+            case DELETE:
+                return "DELETE";
+                break;
+            case HEAD:
+                return "HEAD";
+                break;
+        }
+        
+        return "UNKNOWN";
+    }
+    
+    static std::string versionToString(HTTPVersion ver) 
+    {
+        switch((int)ver) {
+            case HTTP_1_0:
+                return "HTTP/1.0";
+                break;
+            case HTTP_1_1:
+                return "HTTP/1.1";
+                break;
+        }
+        
+        return "HTTP/INVALID";
+    }
+    
+    Data getData();
+    
+private:
+    Data data;
+    std::map<std::string, std::string> headers;
+};
+
+
+class HTTPRequest 
+: public RWSocket::Delegate
+{    
+public:
+    struct Delegate 
+    {
+        virtual ~Delegate() {};
+        virtual void onHeaders(const HTTPRequest&, const HTTPHeadersParser& headers) = 0;
+        virtual void onCanRead(const HTTPRequest&) = 0;
+        virtual void onCanWrite(const HTTPRequest&) = 0;
+        virtual void onDisconnect(const HTTPRequest&) = 0;
+    };
+    
+    HTTPRequest( Delegate* del, Socket& sock ) 
+    : delegate(del)
+    , sock(this, sock)
+    , parser(new HTTPHeadersParser( HTTPHeadersParser::REQUEST ))
+    , state(PARSING_HEADERS)
+    {        
+    }
+    
+    virtual void onDisconnect(const RWSocket&);
+    virtual void onCanRead(const RWSocket&);
+    virtual void onCanWrite(const RWSocket&);
+    
+    inline int write(Data& d) 
+    {
+        return sock.write(d); 
+    }
+    
+    inline int read(Data& d) 
+    {
+        return sock.read(d); 
+    }
+    
+    void reset() {
+        state = PARSING_HEADERS;       
+    }
+    
+    inline int getSock() {
+        return sock.getSock();
+    }
+    
+private:
+    Delegate *delegate;
+    RWSocket sock;
+    Data     body;
+    std::auto_ptr<HTTPHeadersParser> parser;
+        
+    enum { PARSING_HEADERS = 0, READING_BODY = 10, DEAD = 20 } state;
+};
+
+#endif // __HTTP_REQUEST_H__
