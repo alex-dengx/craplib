@@ -14,7 +14,6 @@
 		246F6E5A1365E19B0095F396 /* AsyncSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24D43C621360921F00F992AD /* AsyncSocket.cpp */; };
 		246F6E5D1365E19B0095F396 /* AsyncAddrInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */; };
 		246F6E5F1365E19B0095F396 /* AsyncNetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */; };
-		246F6E611365E19B0095F396 /* AsyncSecureSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */; };
 		246F6E631365E19B0095F396 /* LogUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24C5D3E9133A0E820017276F /* LogUtil.cpp */; };
 		246F6E651365E19B0095F396 /* RunLoop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24410A6A133250F50004C635 /* RunLoop.cpp */; };
 		246F6E691365E19B0095F396 /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24CBC13C133295F8000872C5 /* Timer.cpp */; };
@@ -76,8 +75,6 @@
 		248C1A85134FE31B00103E24 /* SSLTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSLTests.h; path = Tests/SSLTests.h; sourceTree = "<group>"; };
 		248C1A88134FE3C200103E24 /* AsyncSSL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSSL.cpp; sourceTree = "<group>"; };
 		248C1A89134FE3C200103E24 /* AsyncSSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSSL.h; sourceTree = "<group>"; };
-		248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncSecureSocket.cpp; sourceTree = "<group>"; };
-		248C1A8C134FE42400103E24 /* AsyncSecureSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSecureSocket.h; sourceTree = "<group>"; };
 		248C1A8E134FEB6100103E24 /* server.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = server.pem; sourceTree = "<group>"; };
 		24931BC1133BBCCC006FE5B0 /* StaticRefCounted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StaticRefCounted.h; sourceTree = "<group>"; };
 		24931BC2133CB855006FE5B0 /* AsyncAddrInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncAddrInfo.h; sourceTree = "<group>"; };
@@ -144,8 +141,6 @@
 				24931BC3133CB855006FE5B0 /* AsyncAddrInfo.cpp */,
 				240F44AA1349FDDE00541FA7 /* AsyncNetInterface.h */,
 				240F44A91349FDDE00541FA7 /* AsyncNetInterface.cpp */,
-				248C1A8C134FE42400103E24 /* AsyncSecureSocket.h */,
-				248C1A8B134FE42400103E24 /* AsyncSecureSocket.cpp */,
 			);
 			name = Network;
 			sourceTree = "<group>";
@@ -398,7 +393,6 @@
 				246F6E5A1365E19B0095F396 /* AsyncSocket.cpp in Sources */,
 				246F6E5D1365E19B0095F396 /* AsyncAddrInfo.cpp in Sources */,
 				246F6E5F1365E19B0095F396 /* AsyncNetInterface.cpp in Sources */,
-				246F6E611365E19B0095F396 /* AsyncSecureSocket.cpp in Sources */,
 				246F6E631365E19B0095F396 /* LogUtil.cpp in Sources */,
 				246F6E651365E19B0095F396 /* RunLoop.cpp in Sources */,
 				246F6E691365E19B0095F396 /* Timer.cpp in Sources */,

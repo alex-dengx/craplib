@@ -36,7 +36,7 @@ public:
     , count(0)
 	, code(0)
     , lineNum(0)
-    , state(IDLE)
+    , curLine("")
 	{
     }
 	
@@ -58,10 +58,9 @@ private:
     long limit, count;
     int lineNum;
     
-    void parseLine(const std::string& line);    
-    enum { IDLE, HEADER, FIRST_R, FIRST_N, SECOND_R } state;
-    
+    void parseLine(const std::string& line);        
     std::stringstream buf;
+    std::string curLine;
 };
 
 class HTTPHeadersWriter
