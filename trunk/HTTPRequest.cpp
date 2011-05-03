@@ -8,7 +8,7 @@ void HTTPHeadersParser::parseLine(const std::string& line)
     std::stringstream ss;
     ss << line;
     
-    if(++lineNum == 1) {
+    if(lineNum == 1) {
         if( type == REQUEST ) {
             
             ss >> method;
@@ -19,7 +19,7 @@ void HTTPHeadersParser::parseLine(const std::string& line)
 
             ss >> version;
             ss >> code;
-            ss >> status;        
+            std::getline(ss, status, '\n'); // multiword
         }
     } else {
         
@@ -31,10 +31,11 @@ void HTTPHeadersParser::parseLine(const std::string& line)
 
 		if( key.empty() || value.empty() ) // Hrissan: your server will crash without it, guy!
 			return;
-        // *key.rbegin() = '\0'; // remove ':'  Hrissan: WTF??? Forget this stupidness forever!
+        
 		key.resize( key.size() - 1 );
 
         // FIXME: this is probably slow with this substr Hrissan: HaHaHa
+        // alex: huyli hahaha? kak sdelat' bliad?!
         headers.insert( std::make_pair(key, value.substr(1, value.length())) );
     }
 }
@@ -52,33 +53,42 @@ void HTTPHeadersParser::write(Data& data)
             // TODO: Throw some error
             return;                    
         }
-        
+
         if(p == '\r') {
-            
-            if(state == FIRST_N)
-                state = SECOND_R;
-            else
-                state = FIRST_R;
+            // Ok. ignore
             
         } else if(p == '\n') {
             
-            if ( state == FIRST_R ) {
-                // Line done
-                state = FIRST_N;            
-                parseLine(buf.str());
-                buf.str("");
-                
-            } else if( state == SECOND_R ) {
-                
+            ++lineNum;
+            
+            // Line done
+            if( buf.str().length() == 0 ) {
+
                 // HTTP headers done
                 buf.str("");            
                 ready = true;
-                return;
-            }
+                return;                
+                
+            } else {
             
+                curLine.append(buf.str());
+                buf.str("");
+            }
+
         } else {
-            if(state == FIRST_N)
-                state = HEADER;
+
+            if( buf.str().empty() ) {
+                // First char on new line
+                if(p == ' ' || p == '\t')
+                {
+                    // Multiline
+                } else {
+                    if(lineNum > 0) {
+                        parseLine(curLine);
+                        curLine = "";
+                    }
+                }    
+            }
             
             buf << p;
         }
