@@ -1,0 +1,1 @@
+The framework features runloops, asynchronous file/network operations, threading, locking, shared/weak pointers and more.
